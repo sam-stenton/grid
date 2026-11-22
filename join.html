@@ -297,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (me.s === "bust") body = `<div class="sk-box bust"><span class="label">A one!</span><span class="sk-big">${me.b ? "−" + me.b : "0"}</span><p class="sub">You were still standing, so you lose this round's pot.</p></div>`;
     else if (me.s === "skunked") body = `<div class="sk-box bust"><span class="label">Double one! Skunked</span><span class="sk-big">${me.b ? "−" + me.b : "0"}</span><p class="sub">You were still standing, so your whole total is wiped.</p></div>`;
     else if (st.phase !== "playing") body = `<div class="sk-box"><h2>Round over</h2><p class="sub">Get ready to stand up again.</p></div>`;
-    else if (!st.pot) body = `<div class="sk-box stand"><span class="label">Round ${LETTERS[st.round] || ""}</span><span class="sk-big">Stand up!</span><p class="sub">Waiting for the first roll.</p></div>`;
+    else if (!st.pot) body = `<div class="sk-box stand"><span class="label">Round ${LETTERS[st.round] || ""}</span><span class="sk-big">Stand up!</span><p class="sub">Waiting for the first roll. It's always safe.</p></div>`;
     else {
       const open = !!st.askKey, pending = S.sitKey && S.sitKey === st.askKey;
       body = `<div class="sk-pot"><span class="label">Pot</span><span class="sk-big">${st.pot}</span></div>
