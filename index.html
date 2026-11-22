@@ -291,11 +291,16 @@ table.probes.rounds td{font-size:18px;font-weight:400;background:none}
 .sk-log .history{flex-wrap:nowrap;overflow:hidden;max-height:none}
 .sk-log .history span:first-child{background:none;color:inherit;border-color:var(--line)}
 .sk-log .history span:last-child{background:var(--hi);color:var(--hi-ink);border-color:var(--ink)}
+.sk-log .history span.dbl{border-color:var(--good);color:var(--good)}
+.sk-log .history span.dbl:last-child{background:var(--good);color:#fff;border-color:var(--good)}
 .sk-log .history span.bad,.sk-log .history span.bad:last-child{background:var(--bad);color:#fff;border-color:var(--bad)}
 .sk-log .history span.muted{background:none!important;border:0!important;color:var(--muted)!important}
 .sk-maths{position:absolute;top:10px;left:10px;right:10px;max-height:calc(100% - 20px);z-index:3;background:var(--surface);border-radius:12px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px;box-shadow:0 0 0 2px var(--ink)}
-.sk-maths .mathbox{border:0}
-.sk-maths>.btn{align-self:flex-end;margin:0 10px 10px 0}
+.sk-maths .mathbox{border:0;padding-right:110px}
+.sk-maths td:nth-child(-n+2),.sk-maths th{white-space:nowrap}
+.sk-maths .mathbox h3{font-size:clamp(20px,3vh,26px)}
+.sk-maths .mathbox{gap:clamp(4px,.8vh,8px);font-size:clamp(15px,2vh,18px)}
+.sk-maths>.btn{position:absolute;top:12px;right:12px}
 .skunk-game .teams-grid{flex:1;min-height:0;align-content:stretch;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
 .skunk-game .tbtn-gap{height:44px}
 .skunk-game .tteam{justify-content:space-between;align-items:center;text-align:center;min-height:0;border-width:2px;border-top-width:10px}
@@ -1346,7 +1351,7 @@ function renderSkunk(root) {
   const endTxt = h => h.end === "sat" ? `All sat · ${h.pot}` : h.end === "one" ? `1 at ${h.pot}` : h.end === "double" ? `1 1 at ${h.pot}` : `Ended · ${h.pot}`;
   const roundsTrack = `<div class="sk-track" aria-label="Round ${Math.min(S.round + 1, 5)} of 5">${LETTERS.map((L, i) => { const h = S.history[i], cur = i === S.round && S.phase === "playing";
     return `<div class="${cur ? "cur" : h ? (h.end === "sat" ? "ok" : "bad") : ""}"><span>${L}</span><small>${h ? endTxt(h) : cur ? "Now" : ""}</small></div>`; }).join("")}</div>`;
-  const chips = S.log.map(d => `<span class="${d.includes(1) ? "bad" : ""}">${d[0]} + ${d[1]}</span>`).join("");
+  const chips = S.log.map(d => `<span class="${d.includes(1) ? "bad" : d[0] === d[1] ? "dbl" : ""}">${d[0]} + ${d[1]}${d[0] === d[1] && d[0] !== 1 ? " ×2" : ""}</span>`).join("");
   const rollLog = `<div class="sk-log"><span class="label">This round</span><div class="history roll-log">${chips || '<span class="muted" style="border:0">No rolls yet</span>'}</div></div>`;
   let right;
   if (phones) right = pkView();
@@ -1366,7 +1371,7 @@ function renderSkunk(root) {
         <span class="st">${t.status === "standing" ? (S.pot ? `Standing · ${S.pot} at risk` : "Standing") : t.status === "banked" ? `Sat down · +${t.banked}` : t.status === "skunked" ? "Skunked! Total wiped" : "Lost this round"}</span>
         ${t.standing && S.phase === "playing" ? `<button type="button" class="btn" data-bank="${i}">Sit down <kbd>${i + 1}</kbd></button>` : `<span class="tbtn-gap" aria-hidden="true"></span>`}
       </div>`).join("")}</div>`;
-  const hint = (phones ? "Students sit down on their phones." : teamMode ? `Keys 1–${teams.length} sit a team down.` : "Everyone keeps score on a whiteboard.") + " The first roll of each round is always safe.";
+  const hint = (phones ? "Students sit down on their phones." : teamMode ? `Keys 1–${teams.length} sit a team down.` : "Everyone keeps score on a whiteboard.") + " The first roll of each round is always safe, and doubles score double.";
   root.innerHTML = `
   <section class="game fit skunk-game">
     <div class="game-head">
@@ -1412,7 +1417,12 @@ function renderSkunk(root) {
     roll3d($("#sDice"), d, poses => {
       S.busy = false; S.dice = d; S.pose = poses; S.rolls++; S.log.push(d);
       const ones = d.filter(x => x === 1).length;
-      if (ones === 0) { S.pot += d[0] + d[1]; S.msg = S.rolls === 1 ? `+${d[0] + d[1]} on the safe first roll. Stay standing or sit down?` : `+${d[0] + d[1]}. Stay standing or sit down?`; S.tone = ""; }
+      if (ones === 0) {
+        const dbl = d[0] === d[1], add = (d[0] + d[1]) * (dbl ? 2 : 1);   // doubles (not 1s) score double
+        S.pot += add;
+        S.msg = `${dbl ? `Double ${d[0]}s! ` : ""}+${add}${S.rolls === 1 ? " on the safe first roll" : ""}. Stay standing or sit down?`;
+        S.tone = dbl ? "good" : "";
+      }
       else S.teams.forEach(t => { if (t.standing) { t.standing = false; if (ones === 1) t.status = "bust"; else { t.status = "skunked"; t.total = 0; } } });
       if (pk.on) pkAfterRoll(ones);
       if (ones === 1) skunkEndRound("one", "A one! Anyone still standing loses this round's points.", "bad");
@@ -1446,7 +1456,7 @@ function skunkClass() {
   return `
     <div class="panel-head"><h2>${S.phase === "over" ? "Game over: add up your five rounds" : "Whole class · everyone plays for themselves"}</h2></div>
     ${S.phase === "over" ? `<p class="hint">Each student adds up the points they banked in S, K, U, N and K. Highest total wins.</p>` : `
-    <ol class="rules-list"><li>Everyone stands up at the start of each round. The first roll is always safe.</li><li>Sit down whenever you like and write the pot on your whiteboard.</li><li>A 1 means anyone still standing scores 0 for the round.</li><li>A double 1 means anyone still standing loses their whole total.</li></ol>
+    <ol class="rules-list"><li>Everyone stands up at the start of each round. The first roll is always safe.</li><li>Sit down whenever you like and write the pot on your whiteboard.</li><li>A double scores double points (2-2 adds 8).</li><li>A 1 means anyone still standing scores 0 for the round. A double 1 means they lose their whole total.</li></ol>
     ${skunkOdds()}
     ${S.phase === "playing" && S.pot > 0 ? `<div class="controls"><button type="button" class="btn ghost" id="sAllSat">Everyone has sat down</button></div>` : ""}`}`;
 }
@@ -1456,7 +1466,7 @@ function skunkOdds() {
   const S = skunk, done = S.phase === "playing" ? S.rolls : Math.max(0, S.rolls - 1), k = Math.max(0, done - 1), surv = Math.pow(25 / 36, k);
   const first = S.phase === "playing" && S.rolls === 0;
   return `<div class="sk-odds">
-    <div><span class="label">Next roll: no 1s</span><span class="v">${first ? "1" : mfrac(25, 36)}</span><small>${first ? "The first roll is always safe" : "69% · the pot grows by 8 on average"}</small></div>
+    <div><span class="label">Next roll: no 1s</span><span class="v">${first ? "1" : mfrac(25, 36)}</span><small>${first ? "The first roll is always safe" : "69% · the pot grows by 9.6 on average"}</small></div>
     <div class="warn"><span class="label">Next roll: a 1</span><span class="v">${first ? "0" : mfrac(11, 36)}</span><small>${first ? "Nobody can lose on the first roll" : `31% · anyone standing loses ${S.phase === "playing" ? S.pot : "the pot"}`}</small></div>
     <div><span class="label">Surviving ${k} risky ${k === 1 ? "roll" : "rolls"}</span><span class="v">${k ? `(${mfrac(25, 36)})<sup>${k}</sup>` : "1"}</span><small>${k ? `≈ ${(surv * 100).toFixed(surv < .1 ? 1 : 0)}% · ${surv < .25 ? "the room has been lucky" : surv < .5 ? "about as expected" : "early days"}` : "after the safe first roll"}</small></div>
   </div>`;
@@ -1467,12 +1477,12 @@ function skunkMaths() {
   return `<div class="mathbox">
     <h3>The maths of one more roll</h3>
     <table><tr><th>Outcome</th><th>Probability</th><th>Effect on anyone standing</th></tr>
-      <tr><td>No 1s</td><td>${mfrac(25, 36)} ≈ 0.694</td><td>Pot grows by 8 on average (each die averages 4)</td></tr>
+      <tr><td>No 1s</td><td>${mfrac(25, 36)} ≈ 0.694</td><td>Pot grows by ${mfrac(240, 25)} = 9.6 on average (doubles count twice)</td></tr>
       <tr><td>Exactly one 1</td><td>${mfrac(10, 36)} ≈ 0.278</td><td>Lose the pot</td></tr>
       <tr><td>Double 1</td><td>${mfrac(1, 36)} ≈ 0.028</td><td>Lose the pot and the banked total</td></tr></table>
-    <p>Expected change = ${mfrac(25, 36)}(8) − ${mfrac(10, 36)}(pot) − ${mfrac(1, 36)}(pot + total) = <b>${mfrac("200 − 11 × pot − total", 36)}</b></p>
-    <p class="muted">House rule: the first roll of each round can't be a 1, so these odds apply from the second roll. With nothing banked, rolling again pays off on average while the pot is under about 18. Right now the pot is <b>${S.pot}</b>: ${S.pot < 18 ? "staying up is worth it on average, if your total is small." : "on average, sitting down is the better choice."}</p>
-    ${S.phase === "playing" && rows.length ? `<table><tr><th>Team</th><th>Expected change if they stay up</th></tr>${rows.map(({i, t}) => { const e = (200 - 11 * S.pot - t.total) / 36; return `<tr><td style="color:${TC[i]};font-weight:700">${esc(teams[i].name)}</td><td style="font-weight:700;color:${e >= 0 ? "var(--good)" : "var(--bad)"}">${e >= 0 ? "+" : "−"}${Math.abs(e).toFixed(1)}</td></tr>`; }).join("")}</table>` : ""}
+    <p>Expected change = ${mfrac(25, 36)}(9.6) − ${mfrac(10, 36)}(pot) − ${mfrac(1, 36)}(pot + total) = <b>${mfrac("240 − 11 × pot − total", 36)}</b></p>
+    <p class="muted">House rules: the first roll of each round can't be a 1, so these odds apply from the second roll, and doubles score double. With nothing banked, rolling again pays off on average while the pot is under about 22 (240 ÷ 11 ≈ 21.8). Right now the pot is <b>${S.pot}</b>: ${S.pot < 22 ? "staying up is worth it on average, if your total is small." : "on average, sitting down is the better choice."}</p>
+    ${S.phase === "playing" && rows.length ? `<table><tr><th>Team</th><th>Expected change if they stay up</th></tr>${rows.map(({i, t}) => { const e = (240 - 11 * S.pot - t.total) / 36; return `<tr><td style="color:${TC[i]};font-weight:700">${esc(teams[i].name)}</td><td style="font-weight:700;color:${e >= 0 ? "var(--good)" : "var(--bad)"}">${e >= 0 ? "+" : "−"}${Math.abs(e).toFixed(1)}</td></tr>`; }).join("")}</table>` : ""}
   </div>`;
 }
 

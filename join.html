@@ -118,7 +118,7 @@ h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margi
 .sit[disabled]{background:var(--line);color:var(--muted);box-shadow:none}
 .sk-foot{display:flex;justify-content:space-between;font-size:16px;color:var(--muted)}
 .sk-foot b{color:var(--ink);font-size:20px}
-.sk-foot b.one{color:var(--bad)}
+.sk-foot b.one{color:var(--bad)} .sk-foot b.dbl{color:var(--good)}
 </style>
 </head>
 <body>
@@ -283,7 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const top = `<div class="top">${brand}<span class="right">${tm ? `<span class="team" style="--tc:${tm.colour}">${esc(tm.name)}</span>` : ""}<span class="pts">${pts} ${pts === 1 ? "pt" : "pts"}</span></span></div>`;
     const track = `<div class="sk-track">${LETTERS.map((L, i) => `<span class="${i === st.round && st.phase !== "over" ? "cur" : i < st.round || st.phase === "over" ? "done" : ""}">${L}</span>`).join("")}</div>`;
     const lastRoll = st.last ? (Array.isArray(st.last) ? st.last : Object.values(st.last)) : null;
-    const rollTxt = lastRoll ? `Last roll <b class="${lastRoll.includes(1) ? "one" : ""}">${lastRoll[0]} + ${lastRoll[1]}</b>` : "No rolls yet";
+    const dbl = lastRoll && lastRoll[0] === lastRoll[1] && lastRoll[0] !== 1;
+    const rollTxt = lastRoll ? `Last roll <b class="${lastRoll.includes(1) ? "one" : dbl ? "dbl" : ""}">${lastRoll[0]} + ${lastRoll[1]}${dbl ? " · double!" : ""}</b>` : "No rolls yet";
     const total = me ? me.t : 0;
     const foot = `<div class="sk-foot"><span>Your total <b>${total}</b></span><span>${rollTxt}</span></div>`;
     const flashHTML = `<p class="flash ${S.flash ? S.flash.tone : "tip"}" aria-live="polite">${S.flash ? esc(S.flash.text) : ""}</p>`;
@@ -297,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (me.s === "bust") body = `<div class="sk-box bust"><span class="label">A one!</span><span class="sk-big">${me.b ? "−" + me.b : "0"}</span><p class="sub">You were still standing, so you lose this round's pot.</p></div>`;
     else if (me.s === "skunked") body = `<div class="sk-box bust"><span class="label">Double one! Skunked</span><span class="sk-big">${me.b ? "−" + me.b : "0"}</span><p class="sub">You were still standing, so your whole total is wiped.</p></div>`;
     else if (st.phase !== "playing") body = `<div class="sk-box"><h2>Round over</h2><p class="sub">Get ready to stand up again.</p></div>`;
-    else if (!st.pot) body = `<div class="sk-box stand"><span class="label">Round ${LETTERS[st.round] || ""}</span><span class="sk-big">Stand up!</span><p class="sub">Waiting for the first roll. It's always safe.</p></div>`;
+    else if (!st.pot) body = `<div class="sk-box stand"><span class="label">Round ${LETTERS[st.round] || ""}</span><span class="sk-big">Stand up!</span><p class="sub">Waiting for the first roll. It's always safe, and doubles score double.</p></div>`;
     else {
       const open = !!st.askKey, pending = S.sitKey && S.sitKey === st.askKey;
       body = `<div class="sk-pot"><span class="label">Pot</span><span class="sk-big">${st.pot}</span></div>
