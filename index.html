@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22c" defer></script>
-<script src="js/live.js?v=2026-11-22c" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22d" defer></script>
+<script src="js/live.js?v=2026-11-22d" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 /* Layout idea: an exercise-book grid as the stage, scoreboard docked along the bottom like a sports ticker; built to be read from the back of a classroom. */
@@ -460,9 +460,17 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
 .pb-prize.won{border-color:var(--good);color:var(--ink);background:color-mix(in srgb,var(--good) 16%,transparent)}
 .pb-wait{margin:0;font-size:20px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--hi) 30%,transparent)}
 .pb-wait.ok{background:color-mix(in srgb,var(--good) 14%,transparent)}
-.pb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;overflow:auto;min-height:0;flex:1;align-content:start;padding:2px}
+.pb-grid{--mc:128px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--mc),1fr));gap:10px;overflow:auto;min-height:0;flex:1;align-content:start;padding:2px}
 .pb-p{border:2px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
 .pb-p.waiting{border-color:var(--hi);box-shadow:0 0 0 2px var(--hi)}
+.pb-grid .mcard span{font-size:calc(var(--mc) * .125)}
+.pb-grid .pb-top{font-size:calc(var(--mc) * .115)}
+.pb-grid .pb-pts{font-size:calc(var(--mc) * .17)}
+.pb-togo{font-size:calc(var(--mc) * .1);font-weight:700;color:var(--muted);text-align:center;line-height:1.1}
+.pb-p.close{border-color:var(--hi);animation:closePulse 1.1s ease-in-out infinite}
+.pb-p.close .pb-togo{color:var(--ink);background:var(--hi);border-radius:999px;padding:2px 0;color:#131A2C}
+@keyframes closePulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hi) 80%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--hi) 25%,transparent)}}
+@media (prefers-reduced-motion:reduce){.pb-p.close{animation:none;box-shadow:0 0 0 4px var(--hi)}}
 .pb-top{display:flex;justify-content:space-between;gap:6px;align-items:baseline;font-size:15px;min-width:0}
 .pb-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pb-pts{font-family:var(--display);font-weight:900;font-size:22px;color:var(--accent)}
@@ -478,6 +486,43 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
 
 /* ---------- live session dialog ---------- */
 .live-btn.on{background:var(--good);border-color:var(--good);color:#fff}
+.mode{display:flex}
+.mode .btn{border-radius:0}
+.mode .btn:first-child{border-radius:12px 0 0 12px;border-right-width:1px}
+.mode .btn:last-child{border-radius:0 12px 12px 0;border-left-width:1px}
+.mode #offBtn[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.mode #offBtn.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+/* online scoreboard: players ranked, or teams of players */
+.sb-rank{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;gap:8px;height:58px;overflow:hidden;align-content:flex-start}
+.sb-p{display:flex;align-items:center;gap:8px;height:58px;padding:0 14px 0 10px;border:2px solid var(--line);border-radius:12px;background:var(--surface);transition:background .4s ease;max-width:240px}
+.sb-p .rk{font-family:var(--display);font-weight:900;font-size:18px;color:var(--muted);min-width:34px;text-align:center}
+.sb-p b{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sb-p .sc{font-family:var(--display);font-weight:900;font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.sb-p.r1{border-color:#E0AE00;box-shadow:inset 0 0 0 1px #E0AE00} .sb-p.r1 .rk{color:#B88A00}
+.sb-p.r2{border-color:#97A3B6} .sb-p.r3{border-color:#C27A3A}
+.sb-p.up{background:color-mix(in srgb,var(--hi) 45%,var(--surface))}
+.sb-p.off{opacity:.55}
+.sb-oteam{flex:1 1 0;min-width:170px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;column-gap:10px;align-items:center;border-left:8px solid var(--tc);padding:4px 6px 4px 10px;border-radius:4px;transition:background .3s ease}
+.sb-oteam.flash{background:color-mix(in srgb,var(--tc) 25%,transparent)}
+.sb-oteam .tn{font-weight:700;font-size:15px}
+.sb-oteam .sc{grid-row:1/3;grid-column:2;font-family:var(--display);font-weight:900;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.sb-oteam .pm{grid-row:1/3;grid-column:3;display:flex;flex-direction:column;gap:3px}
+.sb-oteam .pm button{width:28px;height:24px;border:2px solid var(--ink);border-radius:7px;background:var(--surface);font-weight:700;padding:0;line-height:1}
+.sb-oteam .mem{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-tools .oseg{gap:0}
+.sb-tools .oseg button{border-radius:0}
+.sb-tools .oseg button:first-child{border-radius:8px 0 0 8px}
+.sb-tools .oseg button:last-child{border-radius:0 8px 8px 0;border-left:0}
+.sb-tools .oseg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.sb-more{font-size:13px;color:var(--muted);font-weight:700}
+.td-cols{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px}
+.td-col{border:2px solid var(--tc);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.td-col h3{margin:0;font-size:20px;color:var(--tc);display:flex;justify-content:space-between}
+.td-p{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;border-radius:10px;background:var(--paper);font-weight:700;font-size:16px}
+.td-p span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-dots{display:flex;gap:4px;flex:0 0 auto}
+.td-dots button{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);background:var(--tc);padding:0;cursor:pointer;box-shadow:0 0 0 1px var(--line)}
+.td-dots button:hover,.td-dots button:focus-visible{transform:scale(1.2)}
 .ldlg{position:fixed;inset:0;background:rgba(8,12,22,.55);display:grid;place-items:center;z-index:60;padding:16px}
 .ldlg[hidden]{display:none}
 .ldlg-box{background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-radius:20px;width:min(1100px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:clamp(18px,2.4vw,32px);display:flex;flex-direction:column;gap:18px;box-shadow:8px 8px 0 var(--ink)}
@@ -514,12 +559,13 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
   <a class="brand" href="#"><span class="mark" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 1v18M13 1v18M1 7h18M1 13h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>The Grid</a>
   <span class="crumb" id="crumb"></span>
   <span class="spacer"></span>
-  <button class="btn ghost live-btn" id="liveBtn" type="button" aria-haspopup="dialog">📱 Live</button>
+  <div class="mode" role="group" aria-label="Play mode"><button class="btn ghost" id="offBtn" type="button" aria-pressed="true">Offline</button><button class="btn ghost live-btn" id="liveBtn" type="button" aria-haspopup="dialog" aria-pressed="false">📱 Online</button></div>
   <a class="btn ghost" id="homeBtn" href="#">All games</a>
   <button class="btn ghost" id="fsBtn" type="button">Full screen</button>
 </header>
 <main id="app"></main>
 <footer class="scoreboard" id="scoreboard" aria-label="Team scores"></footer>
+<div class="ldlg" id="teamDlg" hidden><div class="ldlg-box" role="dialog" aria-modal="true" aria-labelledby="tdTitle" id="teamBox"></div></div>
 <div class="ldlg" id="liveDlg" hidden><div class="ldlg-box" role="dialog" aria-modal="true" aria-labelledby="ldTitle" id="liveBox"></div></div>
 
 <script>
@@ -728,9 +774,18 @@ let teams = store.get("teams", null);
 if (!Array.isArray(teams) || !teams.length) teams = defaultTeams(4);
 let resetArmed = false;
 let teamMode = store.get("teamMode", true) !== false;
-function saveTeams() { store.set("teams", teams); }
+/* Offline: the classroom teams above. Online (a live session is running): points belong to the players who joined,
+   shown ranked, or the players are split into teams. `teams` and `teamMode` point at whichever set is in use,
+   so every game's team code works in both modes. */
+const offlineTeams = teams;
+let offlineTeamMode = teamMode, onlineOn = false;
+const online = (() => { const o = store.get("online", null); return o && Array.isArray(o.teams) && o.teams.length ? {group: o.group === "teams" ? "teams" : "players", teams: o.teams, of: o.of || {}} : {group: "players", teams: defaultTeams(4), of: {}}; })();
+function saveOnline() { store.set("online", online); }
+function applyMode() { teams = onlineOn ? online.teams : offlineTeams; teamMode = onlineOn ? online.group === "teams" : offlineTeamMode; }
+function saveTeams() { if (onlineOn) saveOnline(); else store.set("teams", teams); }
 function renderScoreboard() {
   const sb = $("#scoreboard");
+  if (onlineOn) { sb.classList.remove("off"); return renderOnlineBoard(sb); }
   sb.classList.toggle("off", !teamMode);
   if (!teamMode) {
     sb.innerHTML = `<div class="sb-off"><span><b>Whole class mode.</b> Team scores are hidden, not deleted.</span><button type="button" id="tShow">Show teams</button></div>`;
@@ -750,6 +805,11 @@ function renderScoreboard() {
 function award(i, pts) {
   if (!teamMode || !teams[i]) return;
   teams[i].score += pts; saveTeams();
+  if (onlineOn) {                       // a team's win counts for each of its players too
+    membersOf(i).forEach(id => bumpPlayer(id, pts)); renderScoreboard();
+    const box = document.querySelector(`.sb-oteam[data-i="${i}"]`); if (box) { box.classList.add("flash"); setTimeout(() => box.classList.remove("flash"), 700); }
+    return;
+  }
   const s = $("#ts" + i); if (s) s.textContent = minus(teams[i].score);
   const box = document.querySelector(`.sb-team[data-i="${i}"]`);
   if (box) { box.classList.add("flash"); const t = setTimeout(() => box.classList.remove("flash"), 700); }
@@ -762,7 +822,8 @@ $("#scoreboard").addEventListener("change", e => { if (/^tn\d$/.test(e.target.id
 $("#scoreboard").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.pm) { award(+b.dataset.i, +b.dataset.pm); return; }
-  if (b.id === "tHide" || b.id === "tShow") { teamMode = b.id === "tShow"; store.set("teamMode", teamMode); renderScoreboard(); rerender(); return; }
+  if (onlineOn) return onlineBoardClick(b);
+  if (b.id === "tHide" || b.id === "tShow") { teamMode = offlineTeamMode = b.id === "tShow"; store.set("teamMode", teamMode); renderScoreboard(); rerender(); return; }
   if (b.id === "tMinus" && teams.length > 2) { teams.pop(); saveTeams(); renderScoreboard(); rerender(); }
   if (b.id === "tPlus" && teams.length < 6) { teams.push({name: "Team " + (teams.length + 1), score: 0}); saveTeams(); renderScoreboard(); rerender(); }
   if (b.id === "tReset") {
@@ -770,6 +831,110 @@ $("#scoreboard").addEventListener("click", e => {
     resetArmed = false; teams.forEach(t => t.score = 0); saveTeams(); renderScoreboard();
   }
 });
+
+/* ---------- online scoreboard ---------- */
+const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+const livePts = id => liveSess.points[id] != null ? liveSess.points[id] : ((liveSess.players[id] && liveSess.players[id].score) || 0);
+const membersOf = i => Object.keys(liveSess.players).filter(id => online.of[id] === i);
+let shownPts = {};
+function bumpPlayer(id, pts) {          // change one player's points (written to Firebase; their phone shows it)
+  if (!liveSess.players[id]) return;
+  liveSess.points[id] = livePts(id) + pts;
+  if (window.Live && liveSess.code) Live.host.setScore(id, liveSess.points[id]);
+}
+function awardPlayer(id, pts) {          // a player scores: in team play it counts for their team as well
+  bumpPlayer(id, pts);
+  if (onlineOn && online.group === "teams" && online.teams[online.of[id]]) { online.teams[online.of[id]].score += pts; saveOnline(); }
+  renderScoreboard();
+}
+function liveTeamsState() {
+  if (online.group !== "teams") return null;
+  const of = {}; Object.keys(liveSess.players).forEach(id => { if (online.of[id] != null) of[id] = online.of[id]; });
+  return {names: online.teams.map(t => t.name), colours: TC.slice(0, online.teams.length), of};
+}
+function pushTeams() { if (window.Live && liveSess.code) Live.host.updateState({teams: liveTeamsState()}).catch(() => {}); }
+function hostSetState(obj) { return Live.host.setState({...obj, v: GRID_VERSION, teams: liveTeamsState()}); }
+/* New players go into the smallest team, so teams stay even as people arrive. */
+function placeNewPlayers() {
+  if (online.group !== "teams") return;
+  const n = online.teams.length; let changed = false;
+  const ids = Object.keys(liveSess.players).sort((a, b) => (liveSess.players[a].joined || 0) - (liveSess.players[b].joined || 0));
+  for (const id of ids) if (!(online.of[id] >= 0 && online.of[id] < n)) {
+    const sizes = online.teams.map((_, i) => membersOf(i).length); online.of[id] = sizes.indexOf(Math.min(...sizes)); changed = true;
+  }
+  if (changed) { saveOnline(); pushTeams(); }
+}
+function shuffleTeams() {
+  const n = online.teams.length; online.of = {};
+  shuffle(Object.keys(liveSess.players)).forEach((id, k) => online.of[id] = k % n);
+  saveOnline(); pushTeams();
+}
+function renderOnlineBoard(sb) {
+  const P = liveSess.players, ids = Object.keys(P), T = online.group === "teams";
+  const tools = `<div class="sb-tools">
+      <div class="row oseg" role="group" aria-label="Score by"><button type="button" data-og="players" aria-pressed="${!T}">Players</button><button type="button" data-og="teams" aria-pressed="${T}">Teams</button></div>
+      <div class="row">${T ? `<button type="button" id="oMinus" aria-label="Fewer teams">−</button><span>${online.teams.length}</span><button type="button" id="oPlus" aria-label="More teams">+</button><button type="button" id="oArrange">Arrange</button>` : `<span class="sb-more" id="oMore"></span>`}<button type="button" id="oReset">${resetArmed ? "Click again" : "Reset points"}</button></div>
+    </div>`;
+  let body;
+  if (!ids.length) body = `<div class="sb-off"><span><b>Online.</b> Nobody's joined yet. The code is <b>${esc(liveSess.code || "")}</b>.</span></div>`;
+  else if (!T) {
+    const list = ids.map(id => ({id, p: livePts(id)})).sort((a, b) => b.p - a.p || String(P[a.id].name).localeCompare(String(P[b.id].name)));
+    body = `<div class="sb-rank" id="oRank">${list.map(({id, p}) => {
+      const r = 1 + list.filter(x => x.p > p).length, tie = list.filter(x => x.p === p).length > 1;
+      return `<div class="sb-p ${r <= 3 && p > 0 ? "r" + r : ""} ${shownPts[id] != null && p > shownPts[id] ? "up" : ""} ${P[id].online === false ? "off" : ""}"><span class="rk">${p > 0 ? (tie ? "=" : "") + ordinal(r) : "–"}</span><b>${esc(P[id].name || "?")}</b><span class="sc">${p}</span></div>`; }).join("")}</div>`;
+  } else {
+    body = online.teams.map((t, i) => { const m = membersOf(i);
+      return `<div class="sb-oteam" style="--tc:${TC[i]}" data-i="${i}"><span class="tn">${esc(t.name)}</span><span class="sc">${minus(t.score)}</span><span class="mem">${m.length ? m.map(id => esc(P[id].name || "?")).join(", ") : "Nobody yet"}</span><span class="pm"><button type="button" data-pm="1" data-i="${i}" aria-label="Give ${esc(t.name)} a point (each player gets one too)">+</button><button type="button" data-pm="-1" data-i="${i}" aria-label="Take a point from ${esc(t.name)}">−</button></span></div>`; }).join("");
+  }
+  sb.innerHTML = body + tools;
+  const up = sb.querySelectorAll(".sb-p.up"); if (up.length) setTimeout(() => up.forEach(e => e.classList.remove("up")), 900);
+  shownPts = {}; ids.forEach(id => shownPts[id] = livePts(id));
+  const rank = $("#oRank"), more = $("#oMore");
+  if (rank && more) {                     // how many players didn't fit on the strip
+    const kids = [...rank.children], top = kids.length ? kids[0].offsetTop : 0, hidden = kids.filter(k => k.offsetTop > top + 4).length;
+    more.textContent = hidden ? `+${hidden} more` : "";
+  }
+}
+function onlineBoardClick(b) {
+  if (b.dataset.og) {
+    if (online.group === b.dataset.og) return;
+    online.group = b.dataset.og;
+    if (online.group === "teams") { if (!Object.keys(liveSess.players).some(id => online.of[id] != null)) shuffleTeams(); placeNewPlayers(); }
+    saveOnline(); applyMode(); pushTeams(); renderScoreboard(); rerender(); return;
+  }
+  if (b.id === "oMinus" && online.teams.length > 2) {
+    online.teams.pop(); const n = online.teams.length;
+    Object.keys(online.of).forEach(id => { if (online.of[id] >= n) delete online.of[id]; });
+    placeNewPlayers(); saveOnline(); pushTeams(); renderScoreboard(); rerender(); teamDlgRender();
+  }
+  if (b.id === "oPlus" && online.teams.length < 6) { online.teams.push({name: "Team " + (online.teams.length + 1), score: 0}); saveOnline(); pushTeams(); renderScoreboard(); rerender(); teamDlgRender(); }
+  if (b.id === "oArrange") teamDlgOpen();
+  if (b.id === "oReset") {
+    if (!resetArmed) { resetArmed = true; renderScoreboard(); setTimeout(() => { resetArmed = false; renderScoreboard(); }, 3000); return; }
+    resetArmed = false; online.teams.forEach(t => t.score = 0); saveOnline();
+    Object.keys(liveSess.players).forEach(id => { liveSess.points[id] = 0; if (window.Live) Live.host.setScore(id, 0); });
+    renderScoreboard(); rerender();
+  }
+}
+/* Arrange teams: tap a colour to move someone. */
+function teamDlgOpen() { $("#teamDlg").hidden = false; teamDlgRender(); const c = $("#tdClose"); if (c) c.focus(); }
+function teamDlgClose() { $("#teamDlg").hidden = true; }
+function teamDlgRender() {
+  const dlg = $("#teamDlg"); if (!dlg || dlg.hidden) return;
+  const P = liveSess.players, n = online.teams.length;
+  $("#teamBox").innerHTML = `<div class="ldlg-head"><div><p class="eyebrow">Online · teams</p><h2 id="tdTitle">Arrange teams</h2></div><button type="button" class="btn ghost" id="tdClose">Done</button></div>
+    <p class="hint">Tap a colour to move someone to that team. New players join the smallest team. Team points stay with the team when someone moves.</p>
+    <div class="td-cols" style="--n:${n}">${online.teams.map((t, i) => { const m = membersOf(i);
+      return `<div class="td-col" style="--tc:${TC[i]}"><h3><span>${esc(t.name)}</span><span>${m.length}</span></h3>${m.map(id => `<div class="td-p"><span>${esc(P[id].name || "?")}</span><span class="td-dots">${online.teams.map((u, j) => j === i ? "" : `<button type="button" style="--tc:${TC[j]}" data-move="${esc(id)}" data-to="${j}" aria-label="Move ${esc(P[id].name || "")} to ${esc(u.name)}" title="${esc(u.name)}"></button>`).join("")}</span></div>`).join("") || `<span class="muted">Nobody yet</span>`}</div>`; }).join("")}</div>
+    <div class="controls"><button type="button" class="btn" id="tdShuffle">Shuffle evenly</button></div>`;
+}
+$("#teamDlg").addEventListener("click", e => {
+  if (e.target.id === "teamDlg" || e.target.closest("#tdClose")) return teamDlgClose();
+  if (e.target.closest("#tdShuffle")) { shuffleTeams(); renderScoreboard(); return teamDlgRender(); }
+  const mv = e.target.closest("[data-move]");
+  if (mv) { online.of[mv.dataset.move] = +mv.dataset.to; saveOnline(); pushTeams(); renderScoreboard(); teamDlgRender(); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#teamDlg").hidden) teamDlgClose(); });
 
 /* award rows inside games */
 const awardLog = {};
@@ -2389,7 +2554,7 @@ function renderHome(root) {
 /* ================= Live session: students join on their phones =================
    The projector starts a session, shows a 4-letter code and a QR code, and lists who has joined.
    Games read `liveSess` to find out who's playing; js/live.js does the Firebase work. */
-const liveSess = {code: null, players: {}, status: "idle", err: "", endArmed: false};
+const liveSess = {code: null, players: {}, points: {}, status: "idle", err: "", endArmed: false};
 const LIVE_ERR = {
   "not-configured": "Live play needs the online version of the Grid with Firebase set up. This copy can't connect to it.",
   "sdk-blocked": "Couldn't load Google's Firebase code. Either this copy can't connect (the claude.ai preview can't), or the network is blocking www.gstatic.com.",
@@ -2401,11 +2566,20 @@ function joinURL(code) {
   const base = location.href.split("#")[0].split("?")[0].replace(/index\.html$/, "");
   return (base.endsWith("/") ? base : base + "/") + "join?code=" + code;
 }
+let offArmed = false;
 function liveRenderBtn() {
-  const b = $("#liveBtn"), n = Object.keys(liveSess.players).length;
-  b.textContent = liveSess.code ? `📱 ${liveSess.code} · ${n} joined` : "📱 Live";
-  b.classList.toggle("on", !!liveSess.code);
+  const b = $("#liveBtn"), o = $("#offBtn"), n = Object.keys(liveSess.players).length;
+  b.textContent = liveSess.code ? `📱 Online · ${liveSess.code} · ${n} joined` : "📱 Online";
+  b.classList.toggle("on", !!liveSess.code); b.setAttribute("aria-pressed", !!liveSess.code);
+  o.setAttribute("aria-pressed", !liveSess.code); o.classList.toggle("armed", offArmed);
+  o.textContent = offArmed ? "Click again to go offline" : "Offline";
+  o.title = liveSess.code ? "Ends the session: phones are disconnected" : "Play with teams in the room";
 }
+$("#offBtn").addEventListener("click", () => {
+  if (!liveSess.code) return;
+  if (!offArmed) { offArmed = true; liveRenderBtn(); setTimeout(() => { offArmed = false; liveRenderBtn(); }, 3500); return; }
+  offArmed = false; liveEnd();
+});
 function liveRenderPlayers() {
   const box = $("#ldPlayers"); if (!box) return;
   const list = Object.entries(liveSess.players).sort((a, b) => (a[1].joined || 0) - (b[1].joined || 0));
@@ -2450,19 +2624,21 @@ async function liveBegin(prefer) {
   liveSess.status = "starting"; liveSess.err = ""; liveRenderDlg();
   try {
     const code = await Live.host.create(prefer);
-    Object.assign(liveSess, {code, status: "on", players: {}});
+    if (code !== prefer) { online.teams.forEach(t => t.score = 0); online.of = {}; saveOnline(); }   // a brand-new session starts from zero
+    Object.assign(liveSess, {code, status: "on", players: {}, points: {}});
     store.set("liveCode", code);
-    Live.host.onPlayers(p => { liveSess.players = p; liveRenderPlayers(); liveRenderBtn(); pbRefresh(); });
-    if (current === "bingo") rerender();
+    onlineOn = true; applyMode();
+    Live.host.onPlayers(p => { liveSess.players = p; placeNewPlayers(); liveRenderPlayers(); liveRenderBtn(); renderScoreboard(); teamDlgRender(); pbRefresh(); });
+    pushTeams(); renderScoreboard(); rerender();
   } catch (e) { liveSess.status = "idle"; liveSess.err = liveErrText(e); store.set("liveCode", null); }
   if (!$("#liveDlg").hidden) liveRenderDlg(); else liveRenderBtn();
 }
 async function liveEnd() {
   try { await Live.host.end(); } catch (e) {}
-  Object.assign(liveSess, {code: null, players: {}, status: "idle", endArmed: false});
-  Object.assign(pb, {on: false, subscribed: false, points: {}, cards: {}, marks: {}});
+  Object.assign(liveSess, {code: null, players: {}, points: {}, status: "idle", endArmed: false});
+  Object.assign(pb, {on: false, subscribed: false, cards: {}, marks: {}});
   if (bingo.view === "phones") bingo.view = "tally";
-  if (current === "bingo") rerender();
+  onlineOn = false; applyMode(); teamDlgClose(); renderScoreboard(); rerender();
   store.set("liveCode", null); liveRenderDlg();
 }
 $("#liveBtn").addEventListener("click", liveOpen);
@@ -2483,9 +2659,9 @@ window.addEventListener("load", () => { const c = store.get("liveCode", null); i
    rules only accept a mark for the number just called, before the next roll. */
 const PB_PRIZES = [["line", "A line", 1], ["corners", "Four corners", 2], ["full", "Full house", 3]];
 const PB_LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-const pb = {on: false, cards: {}, marks: {}, prize: "line", winners: {}, points: {}, gameId: 0, subscribed: false, stopArmed: false};
+const pb = {on: false, cards: {}, marks: {}, prize: "line", winners: {}, gameId: 0, subscribed: false, stopArmed: false};
 const pbPlayers = () => liveSess.players || {};
-const pbPts = id => pb.points[id] != null ? pb.points[id] : ((pbPlayers()[id] && pbPlayers()[id].score) || 0);   // survives a projector refresh
+const pbPts = id => livePts(id);
 const pbName = id => (pbPlayers()[id] && pbPlayers()[id].name) || "?";
 const pbCard = id => { const c = pb.cards[id]; if (!c) return null; const a = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => c[i]); return a.every(v => typeof v === "number") ? a : null; };
 function pbButton() {
@@ -2499,17 +2675,17 @@ function pbSubscribe() {
   Live.host.onMarks(m => { pb.marks = m || {}; pbEvaluate(); pbRefresh(); });
 }
 function pbStart() { pb.on = true; pb.stopArmed = false; bingoStop(); bingoReset(); bingo.view = "phones"; pbSubscribe(); pbNewGame(); }
-function pbStop() { pb.on = false; pb.stopArmed = false; if (bingo.view === "phones") bingo.view = "tally"; if (window.Live && liveSess.code) { Live.host.clearGame(); Live.host.setState({phase: "lobby", game: null, locked: false}); } }
+function pbStop() { pb.on = false; pb.stopArmed = false; if (bingo.view === "phones") bingo.view = "tally"; if (window.Live && liveSess.code) { Live.host.clearGame(); hostSetState({phase: "lobby", game: null, locked: false}); } }
 function pbNewGame() {
   pb.prize = "line"; pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
   if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
 }
-const GRID_VERSION = "2026-11-22c";   // phones on an older copy of join.html reload when this changes
+const GRID_VERSION = "2026-11-22d";   // phones on an older copy of join.html reload when this changes
 function pbWriteState() {
   if (!pb.on || !window.Live || !liveSess.code) return;
   const D = bingoDist(), n = bingo.rolls.length;
   const winners = {}; PB_PRIZES.forEach(([k]) => { if (pb.winners[k]) winners[k] = pb.winners[k].map(id => ({id, name: pbName(id)})); });
-  Live.host.setState({v: GRID_VERSION, 
+  hostSetState({
     game: "bingo", gameId: pb.gameId, phase: !n ? "lobby" : pb.prize === "done" ? "over" : "playing", locked: n > 0,
     cfg: {title: bingoTitle(), lo: D.rows[0][0], hi: D.rows[D.rows.length - 1][0]},
     ncalls: n, callKey: n ? "c" + n : "", last: n ? bingo.rolls[n - 1] : -1, calls: bingo.rolls.slice(),
@@ -2536,7 +2712,7 @@ function pbEvaluate() {
     const won = Object.keys(pb.cards).filter(id => pbPlayers()[id] && (() => { const m = pbValidMarks(id); return m && pbHas(key, m); })());
     if (!won.length) break;
     pb.winners[key] = won; changed = true;
-    won.forEach(id => { pb.points[id] = pbPts(id) + pts; Live.host.setScore(id, pb.points[id]); });
+    won.forEach(id => awardPlayer(id, pts));
     announce(`${label}! ${won.map(pbName).join(", ")} ${won.length > 1 ? "score" : "scores"} ${pts}`, key === "full");
     pb.prize = key === "line" ? "corners" : key === "corners" ? "full" : "done";
   }
@@ -2560,10 +2736,20 @@ function pbHint() {
   const w = pbWaiting();
   return w.length ? `Still to mark: <b>${w.map(id => esc(pbName(id))).join(", ")}</b>` : "Everyone's marked. Roll when you're ready.";
 }
+/* How many more numbers a card needs for the prize being played for (Infinity if it has no card). */
+function pbToGo(m, prize) {
+  if (!m) return Infinity;
+  if (prize === "line") return Math.min(...PB_LINES.map(L => L.filter(i => !m[i]).length));
+  if (prize === "corners") return [0, 2, 6, 8].filter(i => !m[i]).length;
+  if (prize === "full") return m.filter(x => !x).length;
+  return Infinity;
+}
 function pbView() {
-  const n = bingo.rolls.length, ids = Object.keys(pbPlayers());
-  const rows = ids.map(id => { const card = pbCard(id), m = card ? pbValidMarks(id) : null; return {id, card, m, marked: m ? m.filter(Boolean).length : -1, pts: pbPts(id)}; })
-    .sort((a, b) => b.pts - a.pts || b.marked - a.marked || pbName(a.id).localeCompare(pbName(b.id)));
+  const n = bingo.rolls.length, ids = Object.keys(pbPlayers()), playing = n > 0 && pb.prize !== "done";
+  // closest to winning first, so the race is always at the top of the board
+  const rows = ids.map(id => { const card = pbCard(id), m = card ? pbValidMarks(id) : null; return {id, card, m, togo: pbToGo(m, pb.prize), marked: m ? m.filter(Boolean).length : -1, pts: pbPts(id)}; })
+    .sort((a, b) => (a.togo - b.togo || 0) || b.marked - a.marked || b.pts - a.pts || pbName(a.id).localeCompare(pbName(b.id)));
+  const mc = ids.length <= 8 ? 128 : ids.length <= 14 ? 112 : ids.length <= 24 ? 96 : 84;
   const waiting = new Set(pbWaiting());
   const prizeChips = PB_PRIZES.map(([k, label, pts]) => {
     const w = pb.winners[k], cur = pb.prize === k;
@@ -2577,12 +2763,13 @@ function pbView() {
       <div class="controls"><button type="button" class="btn ghost" id="pbStop">${pb.stopArmed ? "Click again to stop" : "Stop the phone game"}</button></div></div>
     <div class="pb-prizes">${prizeChips}</div>
     <p class="pb-wait ${n && waiting.size ? "" : "ok"}">${pbHint()}</p>
-    <div class="pb-grid">${rows.map(({id, card, m, pts}) => {
-      const miss = card ? missed(card, m) : [];
-      return `<div class="pb-p ${waiting.has(id) ? "waiting" : ""}">
+    <div class="pb-grid" style="--mc:${mc}px">${rows.map(({id, card, m, pts, togo}) => {
+      const miss = card ? missed(card, m) : [], close = playing && togo === 1;
+      return `<div class="pb-p ${close ? "close" : waiting.has(id) ? "waiting" : ""}">
         <div class="pb-top"><b>${esc(pbName(id))}</b><span class="pb-pts">${pts}</span></div>
         ${card ? `<div class="mcard">${card.map((v, i) => `<span class="${m[i] ? "hit" : miss[i] ? "miss" : ""}">${v}</span>`).join("")}</div>` : `<div class="mcard empty">${n ? "Next game" : "No card<br>yet"}</div>`}
-      </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Open 📱 Live at the top to show the code.</p>`}</div>`;
+        ${card && playing ? `<div class="pb-togo">${close ? "1 to go!" : togo + " to go"}</div>` : ""}
+      </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Press 📱 Online at the top to show the code.</p>`}</div>`;
 }
 function pbRefresh() {
   if (current !== "bingo") return;

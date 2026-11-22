@@ -50,6 +50,22 @@ button{font:inherit;cursor:pointer}
 .wait i:nth-child(2){animation-delay:.15s}.wait i:nth-child(3){animation-delay:.3s}
 @keyframes b{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.wait i{animation:none}}
+/* game screens fill the phone exactly: no scrolling, the card takes whatever space is left */
+body.fit{height:100vh;height:100dvh;overflow:hidden;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+body.fit .app{height:100%;gap:10px}
+body.fit h2{font-size:30px}
+body.fit .go{font-size:26px;padding:10px 14px;white-space:nowrap}
+body.fit .keys{gap:5px}
+@media (max-height:620px){body.fit .keys button{padding:4px 0;font-size:20px} body.fit h2{font-size:26px} body.fit .app{gap:7px} body.fit .flash{font-size:14px} body.fit .sub{font-size:13px}}
+.pwrap{flex:1 1 0;min-height:110px;container-type:size;display:grid;place-items:center}
+.pwrap .pcard{width:min(100cqw,100cqh);height:min(100cqw,100cqh);grid-template-rows:repeat(3,1fr);gap:2.6cqmin}
+.pwrap .cell{aspect-ratio:auto;width:100%;height:100%;font-size:min(13cqmin,56px);border-radius:min(4.5cqmin,16px)}
+.sub{margin:0;font-size:15px;color:var(--muted);line-height:1.35}
+.wins{margin:0;font-size:15px;color:var(--muted);text-align:center}
+.wins b{color:var(--ink)}
+.team{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:15px;padding:4px 10px;border-radius:999px;border:2px solid var(--tc);color:var(--ink)}
+.team::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--tc)}
+.top .right{display:flex;gap:8px;align-items:center}
 /* ---------- bingo on the phone ---------- */
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .pts{font-family:var(--display);font-weight:900;font-size:22px;padding:4px 12px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
@@ -69,11 +85,12 @@ h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margi
 .cell.shake{animation:shake .35s}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.keys button{font-family:var(--display);font-weight:900;font-size:24px;padding:10px 0;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.keys button{font-family:var(--display);font-weight:900;font-size:22px;padding:7px 0;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
 .keys button:active{background:var(--accent);color:var(--accent-ink)}
 .row{display:flex;gap:10px;align-items:center}
 .row .go{flex:1}
-.flash{margin:0;min-height:1.5em;font-weight:700;text-align:center}
+.flash{margin:0;min-height:1.45em;font-weight:700;text-align:center;font-size:16px;line-height:1.45}
+.flash.tip{color:var(--muted);font-weight:400}
 .flash.bad{color:var(--bad)} .flash.good{color:var(--good)}
 .legend{display:flex;gap:14px;font-size:14px;color:var(--muted);flex-wrap:wrap}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:4px}
@@ -89,8 +106,8 @@ h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margi
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22c" defer></script>
-<script src="js/live.js?v=2026-11-22c" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22d" defer></script>
+<script src="js/live.js?v=2026-11-22d" defer></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   "use strict";
@@ -101,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(location.search);
   const S = {view: "form", code: (params.get("code") || store.get("code") || "").toUpperCase().slice(0, 4), name: store.get("name"), err: "", busy: false, state: null, me: null,
              card: null, marks: {}, draft: Array(9).fill(null), sel: 0, editing: false, pending: {}, flash: null, celebrated: {}, gameId: null, typed: "", shake: -1};
-  const GRID_VERSION = "2026-11-22c";
+  const GRID_VERSION = "2026-11-22d";
   const PRIZES = {line: ["a line", 1], corners: ["four corners", 2], full: ["a full house", 3]};
   const brand = `<div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 1v18M13 1v18M1 7h18M1 13h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>The Grid</div>`;
   const ERR = {
@@ -116,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function render() {
     const app = $("#app");
+    document.body.classList.toggle("fit", S.view === "in" && !!S.state && S.state.game === "bingo");
     if (S.view === "form") {
       app.innerHTML = `${brand}<h1>Get on the Grid</h1>
         <form class="card" id="f" autocomplete="off">
@@ -130,7 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
       renderBingo(app);
     } else if (S.view === "in") {
       const st = S.state || {}, online = S.me && S.me.online !== false;
-      app.innerHTML = `${brand}
+      const tm = myTeam();
+      app.innerHTML = `<div class="top">${brand}<span class="right">${tm ? `<span class="team" style="--tc:${tm.colour}">${esc(tm.name)}</span>` : ""}${S.me && S.me.score ? `<span class="pts">${S.me.score} ${S.me.score === 1 ? "pt" : "pts"}</span>` : ""}</span></div>
         <div class="card"><div class="you"><span class="big">${esc(S.me ? S.me.name : S.name)}</span><span class="muted"><span class="dot ${online ? "" : "off"}"></span>${online ? "Connected" : "Reconnecting"}</span></div>
           <p class="msg good">You're in game ${esc(S.code)}.</p></div>
         <div class="card"><p class="msg">${st.phase === "lobby" || !st.game ? "Watch the board. The game will start soon." : "The game is running. Watch the board."}</p><div class="wait" aria-hidden="true"><i></i><i></i><i></i></div></div>
@@ -144,6 +163,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- bingo ---------- */
   const markOf = i => S.marks[i] || S.pending[i] || null;
+  function myTeam() {                         // set by the projector when it plays in teams
+    const T = S.state && S.state.teams; if (!T || !T.of || T.of[Live.uid] == null) return null;
+    const i = T.of[Live.uid], names = Array.isArray(T.names) ? T.names : Object.values(T.names || {}), cols = Array.isArray(T.colours) ? T.colours : Object.values(T.colours || {});
+    return names[i] ? {name: names[i], colour: cols[i] || "var(--accent)"} : null;
+  }
   function missedCells() {                    // numbers called before this one that you didn't mark in time
     const st = S.state, out = Array(9).fill(false); if (!S.card || !st.calls) return out;
     const cnt = {}; st.calls.slice(0, -1).forEach(v => cnt[v] = (cnt[v] || 0) + 1);
@@ -178,34 +202,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function renderBingo(app) {
     const st = S.state, cfg = st.cfg || {lo: 1, hi: 6, title: ""}, me = S.me || {}, pts = me.score || 0;
-    const top = `<div class="top">${brand}<span class="pts">${pts} ${pts === 1 ? "pt" : "pts"}</span></div>`;
-    const prizeLine = st.phase === "over" ? `<div class="prize"><span>Game over</span><span>Wait for the next game</span></div>`
-      : PRIZES[st.prize] ? `<div class="prize"><span>Playing for ${PRIZES[st.prize][0]}</span><span>${PRIZES[st.prize][1]} ${PRIZES[st.prize][1] === 1 ? "pt" : "pts"}</span></div>` : "";
-    const winners = Object.keys(PRIZES).filter(k => st.winners && st.winners[k]).map(k => { const w = st.winners[k]; return `<p class="muted" style="margin:0">${PRIZES[k][0][0].toUpperCase() + PRIZES[k][0].slice(1)}: <b>${(Array.isArray(w) ? w : Object.values(w)).map(x => esc(x.name)).join(", ")}</b></p>`; }).join("");
-    const flashHTML = `<p class="flash ${S.flash ? S.flash.tone : ""}" aria-live="polite">${S.flash ? esc(S.flash.text) : ""}</p>`;
+    const tm = myTeam();
+    const top = `<div class="top">${brand}<span class="right">${tm ? `<span class="team" style="--tc:${tm.colour}">${esc(tm.name)}</span>` : ""}<span class="pts">${pts} ${pts === 1 ? "pt" : "pts"}</span></span></div>`;
+    const winList = Object.keys(PRIZES).filter(k => st.winners && st.winners[k]).map(k => { const w = st.winners[k]; return `${PRIZES[k][0][0].toUpperCase() + PRIZES[k][0].slice(1)}: <b>${(Array.isArray(w) ? w : Object.values(w)).map(x => esc(x.name)).join(", ")}</b>`; });
+    const winners = winList.length ? `<p class="wins">${winList.join(" · ")}</p>` : "";
+    const flashHTML = (tip = "") => `<p class="flash ${S.flash ? S.flash.tone : "tip"}" aria-live="polite">${S.flash ? esc(S.flash.text) : tip}</p>`;
+    const wrap = inner => `<div class="pwrap"><div class="pcard">${inner}</div></div>`;
     let body;
     if (st.phase === "lobby" && (!S.card || S.editing)) {
       const big = cfg.hi - cfg.lo > 41, full = S.draft.every(v => v != null);
-      body = `<h2>Make your card</h2><p class="muted" style="margin:0">${esc(cfg.title)}. Pick 9 numbers from ${cfg.lo} to ${cfg.hi}. Repeats are allowed.</p>
-        <div class="pcard">${S.draft.map((v, i) => `<button type="button" class="cell ${v == null ? "empty" : ""} ${i === S.sel ? "sel" : ""}" data-cell="${i}" aria-label="Square ${i + 1}${v == null ? ", empty" : ", " + v}">${v == null ? "" : v}</button>`).join("")}</div>
+      body = `<h2>Make your card</h2><p class="sub">${esc(cfg.title)}: pick 9 numbers from ${cfg.lo} to ${cfg.hi}. Repeats are allowed.</p>
+        ${wrap(S.draft.map((v, i) => `<button type="button" class="cell ${v == null ? "empty" : ""} ${i === S.sel ? "sel" : ""}" data-cell="${i}" aria-label="Square ${i + 1}${v == null ? ", empty" : ", " + v}">${v == null ? "" : v}</button>`).join(""))}
         ${big ? `<div class="row"><input id="numIn" inputmode="numeric" placeholder="${cfg.lo}–${cfg.hi}" value="${esc(S.typed)}" style="flex:1"><button type="button" class="go" id="numGo" style="flex:0 0 auto;width:auto;padding:12px 20px;font-size:24px">Add</button></div>`
           : `<div class="keys">${Array.from({length: cfg.hi - cfg.lo + 1}, (_, k) => cfg.lo + k).map(v => `<button type="button" data-key="${v}">${v}</button>`).join("")}</div>`}
-        ${flashHTML}
+        ${flashHTML("Tap a square, then a number.")}
         <div class="row"><button type="button" class="link" id="clr">Clear</button><button type="button" class="go" id="lockIn" ${full ? "" : "disabled"}>Lock in my card</button></div>`;
     } else if (st.phase === "lobby") {
-      body = `<h2>Card ready ✓</h2><p class="muted" style="margin:0">Waiting for the first roll. Your card locks when it starts.</p>
-        <div class="pcard">${S.card.map(v => `<div class="cell">${v}</div>`).join("")}</div>
+      body = `<h2>Card ready ✓</h2><p class="sub">Waiting for the first roll. Your card locks when it starts.</p>
+        ${wrap(S.card.map(v => `<div class="cell">${v}</div>`).join(""))}
         <button type="button" class="link" id="edit">Change my card</button>`;
     } else if (!S.card) {
-      body = `${prizeLine}<div class="card call"><span>Last call</span><span class="num">${st.last}</span></div>
+      body = `<div class="card call"><span><b>Last call</b></span><span class="num">${st.last}</span></div>
         <p class="msg">This game started before you made a card. You'll play the next one.</p>${winners}`;
     } else {
       const miss = missedCells(), over = st.phase === "over";
-      body = `${over ? `<div class="results"><p><b>Game over</b></p>${winners.replace(/class="muted" /g, "")}</div>` : prizeLine}
-        <div class="card call"><span><b>${over ? "Final call" : "Call " + st.ncalls}</b><br><span class="muted">${over ? `${st.ncalls} numbers rolled` : "Tap it if it's on your card"}</span></span><span class="num">${st.last}</span></div>
-        <div class="pcard">${S.card.map((v, i) => { const m = markOf(i); return `<button type="button" class="cell ${S.marks[i] ? "hit" : m ? "hit pending" : miss[i] ? "miss" : ""} ${S.shake === i ? "shake" : ""}" data-mark="${i}" aria-label="${v}${m ? ", marked" : miss[i] ? ", missed" : ""}">${v}</button>`; }).join("")}</div>
-        ${flashHTML}
-        <div class="legend"><span><i style="background:var(--good)"></i>Marked</span><span><i style="border:2px dashed var(--bad)"></i>Missed</span></div>${over ? "" : winners}`;
+      const pr = PRIZES[st.prize];
+      body = `${over ? `<div class="results"><p><b>Game over</b></p>${winList.map(w => `<p>${w}</p>`).join("")}</div>` : ""}
+        <div class="card call"><span><b>${over ? "Final call" : "Call " + st.ncalls}</b><br><span class="muted">${over ? `${st.ncalls} numbers rolled` : pr ? `Playing for ${pr[0]} · ${pr[1]} ${pr[1] === 1 ? "pt" : "pts"}` : ""}</span></span><span class="num">${st.last}</span></div>
+        ${wrap(S.card.map((v, i) => { const m = markOf(i); return `<button type="button" class="cell ${S.marks[i] ? "hit" : m ? "hit pending" : miss[i] ? "miss" : ""} ${S.shake === i ? "shake" : ""}" data-mark="${i}" aria-label="${v}${m ? ", marked" : miss[i] ? ", missed" : ""}">${v}</button>`; }).join(""))}
+        ${flashHTML(over ? "" : miss.some(Boolean) ? "Red dashed squares are numbers you missed." : "Tap the number if it's on your card.")}
+        ${over ? "" : winners}`;
     }
     app.innerHTML = `${top}${body}`;
     app.querySelectorAll("[data-cell]").forEach(b => b.onclick = () => { S.sel = +b.dataset.cell; render(); });
