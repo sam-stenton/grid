@@ -37,6 +37,9 @@
   const cleanName = s => String(s || "").replace(/[<>&"]/g, "").replace(/\s+/g, " ").trim().slice(0, 16);
   const cleanCode = s => String(s || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
 
+  /* `answers` is cleared on its own, so an older copy of the database rules (without it) can't block anything else. */
+  const clearAnswers = path => ref(path).remove().catch(() => {});
+
   /* ---------- the projector ---------- */
   const host = {
     code: null, _offs: [],
@@ -53,7 +56,7 @@
         });
         if (!res.committed) continue;
         this.code = code;
-        if (!resumed) await ref(`rooms/${code}`).update({state: null, players: null, cards: null, marks: null});   // clear anything left from an old room
+        if (!resumed) { await ref(`rooms/${code}`).update({state: null, players: null, cards: null, marks: null}); await clearAnswers(`rooms/${code}/answers`); }   // clear anything left from an old room
         const st = await ref(`rooms/${code}/state`).once("value");
         if (!st.exists()) await this.setState({phase: "lobby", game: null, locked: false});
         return code;
@@ -67,16 +70,18 @@
     onPlayers(cb) { this._listen("players", cb); },
     onCards(cb) { this._listen("cards", cb); },
     onMarks(cb) { this._listen("marks", cb); },
+    onAnswers(cb) { this._listen("answers", cb); },
     setScore(id, n) { return ref(`rooms/${this.code}/players/${id}`).update({score: n}); },
-    clearGame() { return ref(`rooms/${this.code}`).update({cards: null, marks: null}); },
+    clearGame() { return Promise.all([ref(`rooms/${this.code}`).update({cards: null, marks: null}), clearAnswers(`rooms/${this.code}/answers`)]); },
     setState(obj) { return ref(`rooms/${this.code}/state`).set({...obj, t: STAMP()}); },
     updateState(patch) { return ref(`rooms/${this.code}/state`).update({...patch, t: STAMP()}); },
-    kick(id) { return ref(`rooms/${this.code}`).update({[`players/${id}`]: null, [`cards/${id}`]: null, [`marks/${id}`]: null}); },
+    kick(id) { clearAnswers(`rooms/${this.code}/answers/${id}`); return ref(`rooms/${this.code}`).update({[`players/${id}`]: null, [`cards/${id}`]: null, [`marks/${id}`]: null}); },
     clearCards() { return ref(`rooms/${this.code}/cards`).remove(); },
     async end() {
       const code = this.code; if (!code) return;
       this._offs.forEach(f => f()); this._offs = []; this.code = null;
       await ref(`rooms/${code}`).update({state: null, players: null, cards: null, marks: null});
+      await clearAnswers(`rooms/${code}/answers`);
       await ref(`rooms/${code}/meta`).remove();
     },
   };
@@ -113,9 +118,11 @@
     setCard(card) { return ref(`rooms/${this.code}/cards/${uid}`).set(card); },
     /* The database accepts a mark only if it's for the number just called and that cell holds it. */
     mark(cell, callKey) { return ref(`rooms/${this.code}/marks/${uid}/${cell}`).set(callKey); },
+    /* A one-off answer (sit down, a guess, a bid). The database accepts it only while the projector has that question open, and only once. */
+    answer(key, value) { return ref(`rooms/${this.code}/answers/${uid}/${key}`).set(value); },
     async leave() {
       const code = this.code; this._offs.forEach(f => f()); this._offs = []; this.code = null;
-      if (code && uid) { try { await ref(`rooms/${code}`).update({[`players/${uid}`]: null, [`cards/${uid}`]: null, [`marks/${uid}`]: null}); } catch (e) {} }
+      if (code && uid) { await clearAnswers(`rooms/${code}/answers/${uid}`); try { await ref(`rooms/${code}`).update({[`players/${uid}`]: null, [`cards/${uid}`]: null, [`marks/${uid}`]: null}); } catch (e) {} }
     },
   };
 

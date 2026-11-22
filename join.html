@@ -98,6 +98,27 @@ h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margi
 .win div{background:var(--hi);color:#131A2C;border:4px solid #131A2C;border-radius:24px;padding:28px 22px;font-family:var(--display);font-weight:900;font-size:56px;line-height:1;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
 .win small{display:block;font-family:var(--body);font-size:20px;margin-top:10px}
 @keyframes pop{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+/* ---------- skunk on the phone ---------- */
+.sk-track{display:flex;gap:6px;justify-content:center}
+.sk-track span{width:44px;height:44px;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:28px;border:2.5px solid var(--ink);border-radius:10px;color:var(--muted);background:var(--surface)}
+.sk-track span.cur{background:var(--ink);color:var(--paper)}
+.sk-track span.done{opacity:.4;text-decoration:line-through}
+.label{font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sk-big{font-family:var(--display);font-weight:900;font-size:clamp(64px,13vh,120px);line-height:.95;font-variant-numeric:tabular-nums}
+.sk-box{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;border:2px solid var(--ink);border-radius:18px;background:var(--surface);padding:16px}
+.sk-box h2{margin:0}
+.sk-box.sat{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))} .sk-box.sat .sk-big{color:var(--good)}
+.sk-box.bust{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))} .sk-box.bust .sk-big{color:var(--bad);font-size:clamp(48px,10vh,96px)}
+.sk-box.win{border-color:#E0AE00;background:color-mix(in srgb,var(--hi) 30%,var(--surface))}
+.sk-box.stand .sk-big{font-size:clamp(48px,10vh,90px)}
+.sk-pot{display:flex;align-items:baseline;justify-content:center;gap:14px}
+.sit{flex:1;min-height:120px;border:0;border-radius:22px;background:var(--good);color:#fff;font-family:var(--display);font-weight:900;font-size:clamp(48px,9vh,76px);line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;touch-action:manipulation;box-shadow:0 6px 0 color-mix(in srgb,var(--good) 60%,#000)}
+.sit small{font-family:var(--body);font-weight:700;font-size:18px;opacity:.9}
+.sit:active{transform:translateY(4px);box-shadow:0 2px 0 color-mix(in srgb,var(--good) 60%,#000)}
+.sit[disabled]{background:var(--line);color:var(--muted);box-shadow:none}
+.sk-foot{display:flex;justify-content:space-between;font-size:16px;color:var(--muted)}
+.sk-foot b{color:var(--ink);font-size:20px}
+.sk-foot b.one{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -106,8 +127,8 @@ h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margi
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22e" defer></script>
-<script src="js/live.js?v=2026-11-22e" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22f" defer></script>
+<script src="js/live.js?v=2026-11-22f" defer></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   "use strict";
@@ -118,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(location.search);
   const S = {view: "form", code: (params.get("code") || store.get("code") || "").toUpperCase().slice(0, 4), name: store.get("name"), err: "", busy: false, state: null, me: null,
              card: null, marks: {}, draft: Array(9).fill(null), sel: 0, editing: false, pending: {}, flash: null, celebrated: {}, gameId: null, typed: "", shake: -1};
-  const GRID_VERSION = "2026-11-22e";
+  const GRID_VERSION = "2026-11-22f";
   const PRIZES = {line: ["a line", 1], corners: ["four corners", 2], full: ["a full house", 3]};
   const brand = `<div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 1v18M13 1v18M1 7h18M1 13h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>The Grid</div>`;
   const ERR = {
@@ -133,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function render() {
     const app = $("#app");
-    document.body.classList.toggle("fit", S.view === "in" && !!S.state && S.state.game === "bingo");
+    document.body.classList.toggle("fit", S.view === "in" && !!S.state && (S.state.game === "bingo" || S.state.game === "skunk"));
     if (S.view === "form") {
       app.innerHTML = `${brand}<h1>Get on the Grid</h1>
         <form class="card" id="f" autocomplete="off">
@@ -146,6 +167,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!S.code) $("#code").focus(); else if (!S.name) $("#name").focus();
     } else if (S.view === "in" && S.state && S.state.game === "bingo") {
       renderBingo(app);
+    } else if (S.view === "in" && S.state && S.state.game === "skunk") {
+      renderSkunk(app);
     } else if (S.view === "in") {
       const st = S.state || {}, online = S.me && S.me.online !== false;
       const tm = myTeam();
@@ -251,6 +274,49 @@ document.addEventListener("DOMContentLoaded", () => {
     const ed = $("#edit"); if (ed) ed.onclick = () => { S.editing = true; S.draft = S.card.slice(); S.sel = 0; render(); };
     app.querySelectorAll("[data-mark]").forEach(b => b.onclick = () => tapMark(+b.dataset.mark));
   }
+
+  /* ---------- skunk ---------- */
+  const LETTERS = ["S", "K", "U", "N", "K"];
+  function renderSkunk(app) {
+    const st = S.state, pl = st.pl || {}, me = pl[Live.uid], pts = (S.me && S.me.score) || 0, tm = myTeam();
+    if (S.sitKey && (!me || me.s !== "standing" || !String(S.sitKey).startsWith("r" + st.round + "c"))) S.sitKey = null;
+    const top = `<div class="top">${brand}<span class="right">${tm ? `<span class="team" style="--tc:${tm.colour}">${esc(tm.name)}</span>` : ""}<span class="pts">${pts} ${pts === 1 ? "pt" : "pts"}</span></span></div>`;
+    const track = `<div class="sk-track">${LETTERS.map((L, i) => `<span class="${i === st.round && st.phase !== "over" ? "cur" : i < st.round || st.phase === "over" ? "done" : ""}">${L}</span>`).join("")}</div>`;
+    const lastRoll = st.last ? (Array.isArray(st.last) ? st.last : Object.values(st.last)) : null;
+    const rollTxt = lastRoll ? `Last roll <b class="${lastRoll.includes(1) ? "one" : ""}">${lastRoll[0]} + ${lastRoll[1]}</b>` : "No rolls yet";
+    const total = me ? me.t : 0;
+    const foot = `<div class="sk-foot"><span>Your total <b>${total}</b></span><span>${rollTxt}</span></div>`;
+    const flashHTML = `<p class="flash ${S.flash ? S.flash.tone : "tip"}" aria-live="polite">${S.flash ? esc(S.flash.text) : ""}</p>`;
+    let body;
+    if (!me) body = `<div class="sk-box"><h2>Skunk</h2><p class="sub">You'll join in from the next round. Watch the board.</p></div>`;
+    else if (st.phase === "over") {
+      const list = Object.values(pl).map(p => p.t), place = 1 + list.filter(t => t > me.t).length;
+      body = `<div class="sk-box ${place === 1 && me.t > 0 ? "win" : ""}"><span class="label">Game over</span><span class="sk-big">${ordinal(place)}</span><p class="sub">with ${me.t} ${me.t === 1 ? "point" : "points"}${place <= 3 && me.t > 0 ? ` · +${4 - place} on the leaderboard` : ""}</p></div>`;
+    } else if (me.s === "waiting") body = `<div class="sk-box"><h2>Next round</h2><p class="sub">You joined mid-round, so you'll stand up for the next one.</p></div>`;
+    else if (me.s === "sat") body = `<div class="sk-box sat"><span class="label">You sat down with</span><span class="sk-big">+${me.b}</span><p class="sub">${st.phase === "playing" ? "Safe for this round. Watch the others sweat." : "Round over. Stand up when the next one starts."}</p></div>`;
+    else if (me.s === "bust") body = `<div class="sk-box bust"><span class="label">A one!</span><span class="sk-big">${me.b ? "−" + me.b : "0"}</span><p class="sub">You were still standing, so you lose this round's pot.</p></div>`;
+    else if (me.s === "skunked") body = `<div class="sk-box bust"><span class="label">Double one! Skunked</span><span class="sk-big">${me.b ? "−" + me.b : "0"}</span><p class="sub">You were still standing, so your whole total is wiped.</p></div>`;
+    else if (st.phase !== "playing") body = `<div class="sk-box"><h2>Round over</h2><p class="sub">Get ready to stand up again.</p></div>`;
+    else if (!st.pot) body = `<div class="sk-box stand"><span class="label">Round ${LETTERS[st.round] || ""}</span><span class="sk-big">Stand up!</span><p class="sub">Waiting for the first roll.</p></div>`;
+    else {
+      const open = !!st.askKey, pending = S.sitKey && S.sitKey === st.askKey;
+      body = `<div class="sk-pot"><span class="label">Pot</span><span class="sk-big">${st.pot}</span></div>
+        <button type="button" class="sit" id="sit" ${open && !pending ? "" : "disabled"}>${pending ? "Sitting down…" : open ? `Sit down<small>Bank ${st.pot} · total ${total + st.pot}</small>` : "Dice rolling…"}</button>
+        <p class="sub" style="text-align:center">A 1 loses ${st.pot}. A double 1 loses ${st.pot + total}.</p>`;
+    }
+    app.innerHTML = `${top}${track}${body}${flashHTML}${foot}`;
+    const sit = $("#sit");
+    if (sit) sit.onclick = () => {
+      const key = st.askKey; if (!key) return;
+      S.sitKey = key; S.flash = null; render();
+      Live.player.answer(key, "sit").catch(() => {
+        S.sitKey = null;
+        if (S.state && S.state.askKey === key) flash("Couldn't send that. Ask your teacher to update the Grid's database rules.", "bad");
+        else flash("Too late: the dice were already thrown.", "bad");
+      });
+    };
+  }
+  const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
 
   async function join(code, name, auto) {
     if (!window.Live) { S.err = "The page didn't load properly. Refresh and try again."; return render(); }

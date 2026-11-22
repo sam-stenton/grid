@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22e" defer></script>
-<script src="js/live.js?v=2026-11-22e" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22f" defer></script>
+<script src="js/live.js?v=2026-11-22f" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 /* Layout idea: an exercise-book grid as the stage, scoreboard docked along the bottom like a sports ticker; built to be read from the back of a classroom. */
@@ -265,6 +265,65 @@ table.probes.rounds td{font-size:18px;font-weight:400;background:none}
 .mathbox table{border-collapse:collapse;font-variant-numeric:tabular-nums}
 .mathbox td,.mathbox th{padding:4px 14px 4px 0;text-align:left}
 .pot{display:flex;flex-direction:column;align-items:center}
+
+/* skunk on one screen */
+.sk-track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%}
+.sk-track div{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.sk-track span{width:100%;aspect-ratio:1;max-height:clamp(44px,7vh,74px);display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:clamp(28px,4.6vh,48px);border:2.5px solid var(--line);border-radius:12px;color:var(--muted)}
+.sk-track small{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.3em}
+.sk-track .cur span{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.sk-track .cur small{color:var(--ink)}
+.sk-track .ok span{border-color:var(--good);color:var(--good)} .sk-track .ok small{color:var(--good)}
+.sk-track .bad span{border-color:var(--bad);color:var(--bad)} .sk-track .bad small{color:var(--bad)}
+.pk-risk{color:var(--muted);font-weight:700}
+.skunk-game .two-col{grid-template-columns:minmax(320px,.78fr) minmax(0,1.6fr);align-items:stretch}
+.skunk-game .caller{justify-content:space-between}
+.skunk-game .caller .msg{font-size:clamp(17px,2.3vh,22px);max-width:30ch}
+.skunk-game .caller .hint{margin:0;font-size:15px}
+.sk-right{position:relative}
+.sk-main{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(8px,1.4vh,14px);overflow:hidden}
+.sk-log{display:flex;align-items:center;gap:12px;min-width:0}
+.sk-log .label{flex:0 0 auto;font-size:13px}
+.sk-log .history{flex-wrap:nowrap;overflow:hidden;max-height:none}
+.sk-maths{position:absolute;top:10px;left:10px;right:10px;max-height:calc(100% - 20px);z-index:3;background:var(--surface);border-radius:12px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px;box-shadow:0 0 0 2px var(--ink)}
+.sk-maths .mathbox{border:0}
+.sk-maths>.btn{align-self:flex-end;margin:0 10px 10px 0}
+.skunk-game .teams-grid{flex:1;min-height:0;align-content:stretch;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+.skunk-game .tbtn-gap{height:44px}
+.skunk-game .tteam{justify-content:space-between;align-items:center;text-align:center;min-height:0;border-width:2px;border-top-width:10px}
+.skunk-game .tteam .tot{font-size:clamp(56px,12vh,130px);line-height:1}
+.skunk-game .tteam.sat .tot{color:var(--good)}
+.skunk-game .tteam .st{color:var(--muted)}
+.skunk-game .tteam.sat .st{color:var(--good)}
+.skunk-game .rules-list{font-size:clamp(16px,2.1vh,19px)}
+.pk-count{font-variant-numeric:tabular-nums}
+.sk-odds{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-content:center}
+.sk-odds>div{border:2px solid var(--line);border-radius:14px;padding:clamp(12px,2vh,22px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.sk-odds .v{font-size:clamp(34px,6vh,60px);font-weight:700;line-height:1.1}
+.sk-odds .v sup{font-size:.5em}
+.sk-odds small{font-size:clamp(14px,1.8vh,17px);color:var(--muted);font-weight:700}
+.sk-odds .warn{border-color:color-mix(in srgb,var(--bad) 55%,var(--line))} .sk-odds .warn .label{color:var(--bad)}
+.pk-grid{--mc:150px;flex:1;min-height:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--mc),1fr));gap:8px;align-content:start;overflow:hidden}
+.pk-p{border:2px solid var(--line);border-radius:12px;padding:calc(var(--mc) * .05) calc(var(--mc) * .07);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:6px;align-items:center;background:var(--surface);transition:background .3s ease,opacity .3s ease}
+.pk-p b{font-size:calc(var(--mc) * .11);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-p .t{grid-row:1/3;grid-column:2;font-family:var(--display);font-weight:900;font-size:calc(var(--mc) * .25);line-height:1;font-variant-numeric:tabular-nums}
+.pk-p .s{font-size:calc(var(--mc) * .085);font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-p.standing{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pk-p.standing .s{color:var(--accent)}
+.pk-p.sat{background:color-mix(in srgb,var(--good) 13%,var(--surface));border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+.pk-p.sat .s{color:var(--good)}
+.pk-p.bust,.pk-p.skunked{opacity:.7} .pk-p.bust .s,.pk-p.skunked .s{color:var(--bad)}
+.pk-p.skunked .t{color:var(--bad)}
+.pk-p.waiting{border-style:dashed;opacity:.6}
+.pk-final{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}
+.pk-f{display:grid;grid-template-columns:52px minmax(0,1fr) auto 40px;align-items:center;gap:10px;padding:8px 12px;border:2px solid var(--line);border-radius:12px}
+.pk-f .pl{font-family:var(--display);font-weight:900;font-size:22px;color:var(--muted)}
+.pk-f b{font-size:19px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-f .t{font-family:var(--display);font-weight:900;font-size:30px}
+.pk-f .aw{font-weight:700;color:var(--good);text-align:right}
+.pk-f.p1{border-color:#E0AE00;background:color-mix(in srgb,#E0AE00 14%,var(--surface))} .pk-f.p1 .pl{color:#B88A00}
+.pk-f.p2{border-color:#97A3B6} .pk-f.p3{border-color:#C27A3A}
+
 
 /* ---------- connect wall ---------- */
 .wall{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
@@ -1160,124 +1219,248 @@ function skunkInit() {
   Object.assign(skunk, {round: 0, pot: 0, phase: "playing", msg: "Everyone stands up. Roll to start round S.", tone: "", uid: uid(), rolls: 0, log: [], history: []});
 }
 function skunkNextRound() {
-  if (skunk.round >= 4) { skunk.phase = "over"; return; }
+  if (skunk.round >= 4) { skunk.phase = "over"; if (pk.on) pkGameOver(); return; }
   skunk.round++; skunk.pot = 0; skunk.rolls = 0; skunk.phase = "playing"; skunk.log = [];
   skunk.teams.forEach(t => { t.standing = true; t.status = "standing"; t.banked = 0; });
+  if (pk.on) Object.values(pk.pl).forEach(p => Object.assign(p, {status: "standing", banked: 0, bustAt: 0}));
   skunk.msg = `Round ${LETTERS[skunk.round]}. Everyone stands up again.`; skunk.tone = "";
 }
+function skunkEndRound(end, msg, tone) {
+  const S = skunk;
+  S.history.push({L: LETTERS[S.round], log: S.log.slice(), end, pot: S.pot});
+  if (end !== "sat") S.pot = 0;
+  S.phase = "roundEnd"; S.msg = msg; S.tone = tone || "";
+}
+
+/* ---------- Skunk on phones ----------
+   Every phone shows the pot and a big Sit down button. A sit-down counts for the roll that was showing when it was pressed:
+   the projector closes sitting the moment the dice are thrown, and the database refuses anything sent after that. */
+const pk = {on: false, gameId: 0, pl: {}, potAt: {}, seen: {}, subscribed: false, stopArmed: false, awarded: 0, open: false};
+const pkKey = () => `r${skunk.round}c${skunk.rolls}`;
+function pkButton() {
+  if (!liveSess.code) return "";
+  return pk.on ? `<button type="button" class="btn live-on" id="pkBtn">📱 Phones on</button>` : `<button type="button" class="btn primary" id="pkBtn">📱 Play on phones</button>`;
+}
+function pkSync() {                         // every player who has joined gets a seat; late arrivals play from the next round
+  Object.keys(liveSess.players).forEach(id => {
+    if (pk.pl[id]) return;
+    const fresh = skunk.phase === "playing" && skunk.rolls === 0;
+    pk.pl[id] = {total: 0, status: fresh ? "standing" : "waiting", banked: 0, bustAt: 0, before: 0};
+  });
+}
+const pkIds = () => Object.keys(pk.pl).filter(id => liveSess.players[id]);
+const pkStanding = () => pkIds().filter(id => pk.pl[id].status === "standing");
+function pkRefresh() {                     // players joined, left or scored
+  if (!pk.on) return;
+  const before = Object.keys(pk.pl).length; pkSync();
+  if (Object.keys(pk.pl).length !== before) pkWrite();
+  if (current === "skunk" && !skunk.busy) rerender();
+}
+function pkStart() {
+  if (pb.on) pbStop();
+  pk.on = true; pk.stopArmed = false; pk.gameId = uid(); pk.pl = {}; pk.potAt = {}; pk.seen = {}; pk.awarded = 0; pk.open = false;
+  skunkInit(); pkSync();
+  if (!pk.subscribed && window.Live) { pk.subscribed = true; Live.host.onAnswers(a => pkAnswers(a || {})); }
+  if (window.Live && liveSess.code) Live.host.clearGame().then(pkWrite);
+}
+function pkStop() {
+  pk.on = false; pk.stopArmed = false; pk.open = false;
+  if (window.Live && liveSess.code) { Live.host.clearGame(); hostSetState({phase: "lobby", game: null, locked: false}); }
+}
+function pkWrite() {
+  if (!pk.on || !window.Live || !liveSess.code) return;
+  const S = skunk, pl = {};
+  pkIds().forEach(id => { const p = pk.pl[id]; pl[id] = {t: p.total, s: p.status, b: p.banked}; });
+  hostSetState({game: "skunk", gameId: pk.gameId, phase: S.phase, round: S.round, pot: S.pot, rolls: S.rolls,
+    last: S.rolls ? S.dice : null, askKey: pk.open ? pkKey() : "", pl, msg: S.msg.replace(/<[^>]+>/g, "")});
+}
+/* Sit-downs arriving from phones. A late one (sent before a 1 was rolled but delivered after) still counts. */
+function pkAnswers(all) {
+  if (!pk.on) return;
+  let changed = false;
+  for (const id of Object.keys(all)) for (const key of Object.keys(all[id] || {})) {
+    if (pk.seen[id + key]) continue; pk.seen[id + key] = true;
+    const m = /^r(\d)c(\d+)$/.exec(key), p = pk.pl[id]; if (!m || !p || +m[1] !== skunk.round || pk.potAt[key] == null) continue;
+    const c = +m[2], pot = pk.potAt[key];
+    if (p.status === "standing" || ((p.status === "bust" || p.status === "skunked") && p.bustAt > c)) {
+      if (p.status === "skunked") p.total = p.before;
+      p.status = "sat"; p.banked = pot; p.total += pot; changed = true;   // banked was holding what they'd lost
+    }
+  }
+  if (!changed) return;
+  if (skunk.phase === "playing" && !pkStanding().length && pkIds().length) { pk.open = false; skunkEndRound("sat", "Everyone has sat down. Round over."); }
+  pkWrite(); if (current === "skunk" && !skunk.busy) rerender();
+}
+function pkAfterRoll(ones) {                // a roll has landed: apply it to every phone player still standing
+  const S = skunk;
+  pkStanding().forEach(id => { const p = pk.pl[id];
+    if (ones === 1) { p.status = "bust"; p.bustAt = S.rolls; p.banked = S.pot; }
+    if (ones === 2) { p.status = "skunked"; p.bustAt = S.rolls; p.before = p.total; p.total = 0; p.banked = S.pot + p.before; } });
+  if (!ones) { pk.potAt[pkKey()] = S.pot; pk.open = true; }
+}
+function pkGameOver() {
+  if (pk.awarded === pk.gameId) return; pk.awarded = pk.gameId;
+  const list = pkIds().map(id => ({id, total: pk.pl[id].total})).sort((a, b) => b.total - a.total);
+  const placed = list.map(x => ({...x, place: 1 + list.filter(y => y.total > x.total).length}));
+  placed.forEach(x => { const pts = Math.max(0, 4 - x.place); if (pts && x.total > 0) awardPlayer(x.id, pts); });
+  const top = placed.filter(x => x.place === 1 && x.total > 0);
+  if (top.length) announce(`Skunk winner${top.length > 1 ? "s" : ""}: ${top.map(x => liveSess.players[x.id].name).join(", ")} with ${top[0].total}`, true);
+}
+function pkView() {
+  const S = skunk, ids = pkIds(), standing = pkStanding().length;
+  const order = ids.slice().sort((a, b) => pk.pl[b].total - pk.pl[a].total || String(liveSess.players[a].name).localeCompare(String(liveSess.players[b].name)));
+  const mc = ids.length <= 6 ? 210 : ids.length <= 12 ? 170 : ids.length <= 20 ? 140 : ids.length <= 28 ? 120 : 104;
+  const st = p => p.status === "standing" ? "Standing" : p.status === "sat" ? `Sat · +${p.banked}` : p.status === "bust" ? (p.banked ? `Lost ${p.banked}` : "Lost the round") : p.status === "skunked" ? "Skunked!" : "Next round";
+  if (S.phase === "over") {
+    const list = order.map(id => ({id, t: pk.pl[id].total})), place = t => 1 + list.filter(x => x.t > t).length;
+    return `<div class="panel-head"><h2>Final standings</h2></div>
+      <p class="hint" style="margin:0">1st, 2nd and 3rd place earn 3, 2 and 1 points on the leaderboard (players on 0 score nothing).</p>
+      <div class="pk-final">${list.slice(0, 12).map(x => { const pl = place(x.t), pts = x.t > 0 ? Math.max(0, 4 - pl) : 0;
+        return `<div class="pk-f ${pl <= 3 && x.t > 0 ? "p" + pl : ""}"><span class="pl">${ordinal(pl)}</span><b>${esc(liveSess.players[x.id].name)}</b><span class="t">${x.t}</span><span class="aw">${pts ? "+" + pts : ""}</span></div>`; }).join("")}</div>
+      ${list.length > 12 ? `<p class="muted" style="margin:0">+${list.length - 12} more</p>` : ""}`;
+  }
+  return `<div class="panel-head"><h2><span class="pk-count">${standing}</span> of ${ids.length} still standing${S.pot && standing ? ` <span class="pk-risk">· ${S.pot} at risk</span>` : ""}</h2>
+      <div class="controls">${S.phase === "playing" && S.pot > 0 ? `<button type="button" class="btn ghost" id="pkEnd" title="End the round now: anyone standing banks nothing">End round</button>` : ""}<button type="button" class="btn ghost" id="pkStop">${pk.stopArmed ? "Click again to stop" : "Stop phones"}</button></div></div>
+    <div class="pk-grid" style="--mc:${mc}px">${order.map(id => { const p = pk.pl[id];
+      return `<div class="pk-p ${p.status}"><b>${esc(liveSess.players[id].name)}</b><span class="t">${p.total}</span><span class="s">${st(p)}</span></div>`; }).join("") || `<p class="muted">Nobody's joined yet.</p>`}</div>`;
+}
+
 function renderSkunk(root) {
   if (!skunk.teams || skunk.teams.length !== teams.length) skunkInit();
-  const S = skunk, standing = S.teams.filter(t => t.standing).length;
+  if (pk.on && !liveSess.code) pk.on = false;
+  if (pk.on) pkSync();
+  const S = skunk, phones = pk.on, standing = S.teams.filter(t => t.standing).length;
   if (!S.pose) S.pose = S.dice.map(restPose);
   const placings = S.teams.map((t, i) => ({i, total: t.total})).sort((a, b) => b.total - a.total)
     .map(p => ({...p, place: 1 + S.teams.filter(t => t.total > p.total).length}));
   const placingPts = p => Math.max(0, 4 - p.place);
   const aKey = "skunk-" + S.uid;
+  const endTxt = h => h.end === "sat" ? `All sat · ${h.pot}` : h.end === "one" ? `1 at ${h.pot}` : h.end === "double" ? `1 1 at ${h.pot}` : `Ended · ${h.pot}`;
+  const roundsTrack = `<div class="sk-track" aria-label="Round ${Math.min(S.round + 1, 5)} of 5">${LETTERS.map((L, i) => { const h = S.history[i], cur = i === S.round && S.phase === "playing";
+    return `<div class="${cur ? "cur" : h ? (h.end === "sat" ? "ok" : "bad") : ""}"><span>${L}</span><small>${h ? endTxt(h) : cur ? "Now" : ""}</small></div>`; }).join("")}</div>`;
+  const chips = S.log.map(d => `<span class="${d.includes(1) ? "bad" : ""}">${d[0]} + ${d[1]}</span>`).join("");
+  const rollLog = `<div class="sk-log"><span class="label">This round</span><div class="history roll-log">${chips || '<span class="muted" style="border:0">No rolls yet</span>'}</div></div>`;
+  let right;
+  if (phones) right = pkView();
+  else if (!teamMode) right = skunkClass();
+  else if (S.phase === "over") right = `
+    <div class="panel-head"><h2>Final scores</h2></div>
+    <table class="probes"><tr><th>Place</th><th>Team</th><th>Total</th><th>Scoreboard</th></tr>
+    ${placings.map(p => `<tr><td>${p.place}</td><td style="color:${TC[p.i]}">${esc(teams[p.i].name)}</td><td>${p.total}</td><td>+${placingPts(p)}</td></tr>`).join("")}</table>
+    ${awardLog[aKey] ? `<div class="award-row done">Placings added to the scoreboard. <button type="button" class="linkbtn" id="sUndo">Undo</button></div>` :
+      `<div class="award-row"><span>Add placings to the scoreboard (3, 2, 1)?</span><button type="button" class="btn primary" id="sAward">Add placings</button></div>`}`;
+  else right = `
+    <div class="panel-head"><h2><span class="pk-count">${standing}</span> of ${S.teams.length} teams standing</h2></div>
+    <div class="teams-grid" style="--cols:${S.teams.length <= 4 ? S.teams.length : 3}">${S.teams.map((t, i) => `
+      <div class="tteam ${t.standing ? "" : t.status === "banked" ? "sat" : "bust"}" style="--tc:${TC[i]}">
+        <span class="nm">${esc(teams[i].name)}</span>
+        <span class="tot">${t.total}</span>
+        <span class="st">${t.status === "standing" ? (S.pot ? `Standing · ${S.pot} at risk` : "Standing") : t.status === "banked" ? `Sat down · +${t.banked}` : t.status === "skunked" ? "Skunked! Total wiped" : "Lost this round"}</span>
+        ${t.standing && S.phase === "playing" ? `<button type="button" class="btn" data-bank="${i}">Sit down <kbd>${i + 1}</kbd></button>` : `<span class="tbtn-gap" aria-hidden="true"></span>`}
+      </div>`).join("")}</div>`;
+  const hint = phones ? "Students sit down on their phones. Sitting closes the moment you roll." : teamMode ? `Keys 1–${teams.length} sit a team down.` : "Everyone keeps score on a whiteboard.";
   root.innerHTML = `
-  <section class="game">
+  <section class="game fit skunk-game">
     <div class="game-head">
       <div><p class="eyebrow">GCSE · A level · push your luck</p><h1>Skunk</h1></div>
       <div class="controls">
-        <button type="button" class="btn" id="sMaths" aria-pressed="${S.showMaths}">Show the maths</button>
+        ${pkButton()}
+        <button type="button" class="btn" id="sMaths" aria-pressed="${S.showMaths}">The maths</button>
         ${motionBtn("sMotion")}
         <button type="button" class="btn ghost" id="sNew">New game</button>
       </div>
     </div>
-    <div class="letters" aria-label="Round ${S.round + 1} of 5">${LETTERS.map((L, i) => `<span class="${i === S.round && S.phase !== "over" ? "cur" : i < S.round || S.phase === "over" ? "done" : ""}">${L}</span>`).join("")}</div>
     <div class="two-col">
       <div class="panel caller">
+        ${roundsTrack}
         ${diceTray(S.pose, "sDice", "skunk")}
         <div class="pot"><span class="label">Round pot</span><span class="big">${S.pot}</span></div>
         <p class="msg ${S.tone}" aria-live="polite">${S.msg}</p>
         ${S.phase === "playing" ? `<button type="button" class="btn primary xl" id="sRoll">Roll<kbd>Space</kbd></button>` :
-          S.phase === "roundEnd" ? `<button type="button" class="btn primary xl" id="sNext">${S.round >= 4 ? "Final scores" : "Start round " + LETTERS[S.round + 1]}</button>` : ""}
-        <p class="hint">${teamMode ? `Teams that are standing share the pot. Sit down to bank it. One <b>1</b> wipes the pot for anyone still standing. Double <b>1</b> wipes their whole total. Keys 1–${teams.length} sit a team down.` : "Everyone plays for themselves and keeps score on a whiteboard."}</p>
+          S.phase === "roundEnd" ? `<button type="button" class="btn primary xl" id="sNext">${S.round >= 4 ? "Final scores" : "Start round " + LETTERS[S.round + 1]}<kbd>Space</kbd></button>` : ""}
+        <p class="hint">${hint}</p>
       </div>
-      <div class="panel">
-        ${!teamMode ? skunkClass() : S.phase === "over" ? `
-          <div class="panel-head"><h2>Final scores</h2></div>
-          <table class="probes"><tr><th>Place</th><th>Team</th><th>Total</th><th>Scoreboard</th></tr>
-          ${placings.map(p => `<tr><td>${p.place}</td><td style="color:${TC[p.i]}">${esc(teams[p.i].name)}</td><td>${p.total}</td><td>+${placingPts(p)}</td></tr>`).join("")}</table>
-          ${awardLog[aKey] ? `<div class="award-row done">Placings added to the scoreboard. <button type="button" class="linkbtn" id="sUndo">Undo</button></div>` :
-            `<div class="award-row"><span>Add placings to the scoreboard (3, 2, 1)?</span><button type="button" class="btn primary" id="sAward">Add placings</button></div>`}
-        ` : `
-          <div class="panel-head"><h2>${standing} of ${S.teams.length} teams standing</h2></div>
-          <div class="teams-grid">${S.teams.map((t, i) => `
-            <div class="tteam ${t.standing ? "" : t.status === "banked" ? "sat" : "bust"}" style="--tc:${TC[i]}">
-              <span class="nm">${esc(teams[i].name)}</span>
-              <span class="tot">${t.total}</span>
-              <span class="st">${t.status === "standing" ? (S.pot ? `Standing · ${S.pot} at risk` : "Standing") : t.status === "banked" ? `Sat down · banked +${t.banked}` : t.status === "skunked" ? "Skunked! Total wiped" : "Lost this round"}</span>
-              <button type="button" class="btn ${t.standing ? "" : "ghost"}" data-bank="${i}" ${t.standing && S.phase === "playing" ? "" : "disabled"}>${t.standing ? `Sit down <kbd>${i + 1}</kbd>` : "Seated"}</button>
-            </div>`).join("")}</div>`}
-        ${S.showMaths ? skunkMaths() : ""}
+      <div class="panel sk-right">
+        <div class="sk-main">${right}</div>
+        ${S.phase !== "over" ? rollLog : ""}
+        ${S.showMaths ? `<div class="sk-maths">${skunkMaths()}<button type="button" class="btn ghost" id="sMathsX">Close</button></div>` : ""}
       </div>
     </div>
   </section>`;
-  $("#sMaths").onclick = () => { S.showMaths = !S.showMaths; renderSkunk(root); };
+  const toggleMaths = () => { S.showMaths = !S.showMaths; renderSkunk(root); };
+  $("#sMaths").onclick = toggleMaths;
+  const mx = $("#sMathsX"); if (mx) mx.onclick = toggleMaths;
   bindMotion("sMotion", () => renderSkunk(root));
-  $("#sNew").onclick = () => { skunkInit(); renderSkunk(root); };
+  $("#sNew").onclick = () => { skunkInit(); if (pk.on) { pk.gameId = uid(); pk.pl = {}; pk.potAt = {}; pk.seen = {}; pk.open = false; pkSync(); if (window.Live) Live.host.clearGame().then(pkWrite); } renderSkunk(root); };
+  const pkb = $("#pkBtn"); if (pkb) pkb.onclick = () => { if (!pk.on) pkStart(); renderSkunk(root); };
+  const pks = $("#pkStop"); if (pks) pks.onclick = () => { if (!pk.stopArmed) { pk.stopArmed = true; renderSkunk(root); setTimeout(() => { pk.stopArmed = false; if (current === "skunk") renderSkunk(root); }, 3000); return; } pkStop(); renderSkunk(root); };
+  const pke = $("#pkEnd"); if (pke) pke.onclick = () => { pk.open = false; pkStanding().forEach(id => { pk.pl[id].status = "bust"; pk.pl[id].bustAt = S.rolls + 1; }); skunkEndRound("ended", "Round ended. Anyone still standing banks nothing."); pkWrite(); renderSkunk(root); };
   const roll = () => {
     if (S.phase !== "playing" || S.busy) return; S.busy = true;
+    if (pk.on) { pk.open = false; pkWrite(); }          // sitting closes as the dice leave the hand
     const d = [rand6(), rand6()];
     const rb = $("#sRoll"); if (rb) rb.disabled = true;
     roll3d($("#sDice"), d, poses => {
       S.busy = false; S.dice = d; S.pose = poses; S.rolls++; S.log.push(d);
       const ones = d.filter(x => x === 1).length;
       if (ones === 0) { S.pot += d[0] + d[1]; S.msg = `+${d[0] + d[1]}. Stay standing or sit down?`; S.tone = ""; }
-      else if (ones === 1) {
-        S.teams.forEach(t => { if (t.standing) { t.standing = false; t.status = "bust"; } });
-        S.history.push({L: LETTERS[S.round], log: S.log.slice(), end: "one", pot: S.pot});
-        S.pot = 0; S.phase = "roundEnd"; S.msg = "A one! Anyone still standing loses this round's points."; S.tone = "bad";
-      } else {
-        S.teams.forEach(t => { if (t.standing) { t.standing = false; t.status = "skunked"; t.total = 0; } });
-        S.history.push({L: LETTERS[S.round], log: S.log.slice(), end: "double", pot: S.pot});
-        S.pot = 0; S.phase = "roundEnd"; S.msg = "Double one! Anyone still standing loses everything."; S.tone = "bad";
-      }
+      else S.teams.forEach(t => { if (t.standing) { t.standing = false; if (ones === 1) t.status = "bust"; else { t.status = "skunked"; t.total = 0; } } });
+      if (pk.on) pkAfterRoll(ones);
+      if (ones === 1) skunkEndRound("one", "A one! Anyone still standing loses this round's points.", "bad");
+      if (ones === 2) skunkEndRound("double", "Double one! Anyone still standing loses everything.", "bad");
+      if (pk.on) pkWrite();
       renderSkunk(root);
     });
   };
   const bank = i => {
-    const t = S.teams[i]; if (!t || !t.standing || S.phase !== "playing") return;
+    const t = S.teams[i]; if (pk.on || !t || !t.standing || S.phase !== "playing") return;
     t.standing = false; t.status = "banked"; t.banked = S.pot; t.total += S.pot;
     S.msg = `${esc(teams[i].name)} sit down with +${S.pot}.`; S.tone = "good";
-    if (!S.teams.some(x => x.standing)) { S.history.push({L: LETTERS[S.round], log: S.log.slice(), end: "sat", pot: S.pot}); S.phase = "roundEnd"; S.msg = "Everyone has sat down. Round over."; S.tone = ""; }
+    if (!S.teams.some(x => x.standing)) skunkEndRound("sat", "Everyone has sat down. Round over.");
     renderSkunk(root);
   };
+  const next = () => { skunkNextRound(); if (pk.on) { pkSync(); pk.open = false; pkWrite(); } renderSkunk(root); };
   const r = $("#sRoll"); if (r) r.onclick = roll;
   $("#sDice").onclick = roll;
-  const nx = $("#sNext"); if (nx) nx.onclick = () => { skunkNextRound(); renderSkunk(root); };
-  const sat = $("#sAllSat"); if (sat) sat.onclick = () => { S.history.push({L: LETTERS[S.round], log: S.log.slice(), end: "sat", pot: S.pot}); S.phase = "roundEnd"; S.msg = "Everyone has sat down. Round over."; S.tone = ""; renderSkunk(root); };
+  const nx = $("#sNext"); if (nx) nx.onclick = next;
+  const sat = $("#sAllSat"); if (sat) sat.onclick = () => { skunkEndRound("sat", "Everyone has sat down. Round over."); renderSkunk(root); };
   root.querySelectorAll("[data-bank]").forEach(b => b.onclick = () => bank(+b.dataset.bank));
   const aw = $("#sAward"); if (aw) aw.onclick = () => { const list = placings.map(p => ({i: p.i, pts: placingPts(p)})); list.forEach(x => award(x.i, x.pts)); awardLog[aKey] = {multi: list}; renderSkunk(root); };
   const un = $("#sUndo"); if (un) un.onclick = () => { awardLog[aKey].multi.forEach(x => award(x.i, -x.pts)); delete awardLog[aKey]; renderSkunk(root); };
   keyHandler = e => {
-    if (e.code === "Space") { e.preventDefault(); roll(); }
-    else if (teamMode && /^[1-6]$/.test(e.key)) bank(+e.key - 1);
+    if (e.code === "Space") { e.preventDefault(); if (e.repeat) return; if (S.phase === "playing") roll(); else if (S.phase === "roundEnd") next(); }
+    else if (teamMode && !pk.on && /^[1-6]$/.test(e.key)) bank(+e.key - 1);
   };
 }
 function skunkClass() {
   const S = skunk;
-  const endTxt = h => h.end === "sat" ? `Everyone sat down at ${h.pot}` : h.end === "one" ? `A 1 when the pot was ${h.pot}: anyone standing scores 0` : `Double 1 when the pot was ${h.pot}: anyone standing loses everything`;
-  const chips = log => log.map(d => `<span class="${d.includes(1) ? "bad" : ""}">${d[0]} + ${d[1]}</span>`).join("") || '<span class="muted" style="border:0">No rolls yet</span>';
   return `
     <div class="panel-head"><h2>${S.phase === "over" ? "Game over: add up your five rounds" : "Whole class · everyone plays for themselves"}</h2></div>
     ${S.phase === "over" ? `<p class="hint">Each student adds up the points they banked in S, K, U, N and K. Highest total wins.</p>` : `
     <ol class="rules-list"><li>Everyone stands up at the start of each round.</li><li>Sit down whenever you like and write the pot on your whiteboard.</li><li>A 1 means anyone still standing scores 0 for the round.</li><li>A double 1 means anyone still standing loses their whole total.</li></ol>
-    <div><p class="label" style="margin:0 0 6px">This round's rolls · pot ${S.pot}</p><div class="history roll-log">${chips(S.log)}</div></div>
-    ${S.phase === "playing" ? `<div class="controls"><button type="button" class="btn ghost" id="sAllSat">Everyone has sat down</button></div>` : ""}`}
-    ${S.history.length ? `<table class="probes rounds"><thead><tr><th>Round</th><th>Rolls</th><th>How it ended</th></tr></thead><tbody>${S.history.map(h => `<tr><td>${h.L}</td><td>${h.log.length}</td><td>${endTxt(h)}</td></tr>`).join("")}</tbody></table>` : ""}`;
+    ${skunkOdds()}
+    ${S.phase === "playing" && S.pot > 0 ? `<div class="controls"><button type="button" class="btn ghost" id="sAllSat">Everyone has sat down</button></div>` : ""}`}`;
+}
+/* The live odds, for whole-class play: what the next roll could do, and how lucky the room has been so far. */
+function skunkOdds() {
+  const S = skunk, k = S.phase === "playing" ? S.rolls : Math.max(0, S.rolls - 1), surv = Math.pow(25 / 36, k);
+  return `<div class="sk-odds">
+    <div><span class="label">Next roll: no 1s</span><span class="v">${mfrac(25, 36)}</span><small>69% · the pot grows by 8 on average</small></div>
+    <div class="warn"><span class="label">Next roll: a 1</span><span class="v">${mfrac(11, 36)}</span><small>31% · anyone standing loses ${S.phase === "playing" ? S.pot : "the pot"}</small></div>
+    <div><span class="label">Surviving ${k} ${k === 1 ? "roll" : "rolls"} in a row</span><span class="v">${k ? `(${mfrac(25, 36)})<sup>${k}</sup>` : "1"}</span><small>${k ? `≈ ${(surv * 100).toFixed(surv < .1 ? 1 : 0)}% · ${surv < .25 ? "the room has been lucky" : surv < .5 ? "about as expected" : "early days"}` : "no rolls yet this round"}</small></div>
+  </div>`;
 }
 function skunkMaths() {
   const S = skunk;
-  const rows = teamMode ? S.teams.map((t, i) => ({i, t})).filter(x => x.t.standing) : [];
+  const rows = teamMode && !pk.on ? S.teams.map((t, i) => ({i, t})).filter(x => x.t.standing) : [];
   return `<div class="mathbox">
     <h3>The maths of one more roll</h3>
-    <table><tr><th>Outcome</th><th>Probability</th><th>Effect on a standing team</th></tr>
+    <table><tr><th>Outcome</th><th>Probability</th><th>Effect on anyone standing</th></tr>
       <tr><td>No 1s</td><td>${mfrac(25, 36)} ≈ 0.694</td><td>Pot grows by 8 on average (each die averages 4)</td></tr>
       <tr><td>Exactly one 1</td><td>${mfrac(10, 36)} ≈ 0.278</td><td>Lose the pot</td></tr>
       <tr><td>Double 1</td><td>${mfrac(1, 36)} ≈ 0.028</td><td>Lose the pot and the banked total</td></tr></table>
     <p>Expected change = ${mfrac(25, 36)}(8) − ${mfrac(10, 36)}(pot) − ${mfrac(1, 36)}(pot + total) = <b>${mfrac("200 − 11 × pot − total", 36)}</b></p>
-    <p class="muted">With nothing banked, rolling again pays off on average while the pot is under about 18.</p>
+    <p class="muted">With nothing banked, rolling again pays off on average while the pot is under about 18. Right now the pot is <b>${S.pot}</b>: ${S.pot < 18 ? "staying up is worth it on average, if your total is small." : "on average, sitting down is the better choice."}</p>
     ${S.phase === "playing" && rows.length ? `<table><tr><th>Team</th><th>Expected change if they stay up</th></tr>${rows.map(({i, t}) => { const e = (200 - 11 * S.pot - t.total) / 36; return `<tr><td style="color:${TC[i]};font-weight:700">${esc(teams[i].name)}</td><td style="font-weight:700;color:${e >= 0 ? "var(--good)" : "var(--bad)"}">${e >= 0 ? "+" : "−"}${Math.abs(e).toFixed(1)}</td></tr>`; }).join("")}</table>` : ""}
   </div>`;
 }
@@ -2628,7 +2811,7 @@ async function liveBegin(prefer) {
     Object.assign(liveSess, {code, status: "on", players: {}, points: {}});
     store.set("liveCode", code);
     onlineOn = true; applyMode();
-    Live.host.onPlayers(p => { liveSess.players = p; placeNewPlayers(); liveRenderPlayers(); liveRenderBtn(); renderScoreboard(); teamDlgRender(); pbRefresh(); });
+    Live.host.onPlayers(p => { liveSess.players = p; placeNewPlayers(); liveRenderPlayers(); liveRenderBtn(); renderScoreboard(); teamDlgRender(); pbRefresh(); pkRefresh(); });
     pushTeams(); renderScoreboard(); rerender();
   } catch (e) { liveSess.status = "idle"; liveSess.err = liveErrText(e); store.set("liveCode", null); }
   if (!$("#liveDlg").hidden) liveRenderDlg(); else liveRenderBtn();
@@ -2637,6 +2820,7 @@ async function liveEnd() {
   try { await Live.host.end(); } catch (e) {}
   Object.assign(liveSess, {code: null, players: {}, points: {}, status: "idle", endArmed: false});
   Object.assign(pb, {on: false, subscribed: false, cards: {}, marks: {}});
+  Object.assign(pk, {on: false, subscribed: false, open: false});
   if (bingo.view === "phones") bingo.view = "tally";
   onlineOn = false; applyMode(); teamDlgClose(); renderScoreboard(); rerender();
   store.set("liveCode", null); liveRenderDlg();
@@ -2675,13 +2859,13 @@ function pbSubscribe() {
   Live.host.onCards(c => { pb.cards = c || {}; pbRefresh(); });
   Live.host.onMarks(m => { pb.marks = m || {}; pbEvaluate(); pbRefresh(); });
 }
-function pbStart() { pb.on = true; pb.stopArmed = false; bingoStop(); bingoReset(); bingo.view = "phones"; pbSubscribe(); pbNewGame(); }
+function pbStart() { if (pk.on) pkStop(); pb.on = true; pb.stopArmed = false; bingoStop(); bingoReset(); bingo.view = "phones"; pbSubscribe(); pbNewGame(); }
 function pbStop() { pb.on = false; pb.stopArmed = false; if (bingo.view === "phones") bingo.view = "tally"; if (window.Live && liveSess.code) { Live.host.clearGame(); hostSetState({phase: "lobby", game: null, locked: false}); } }
 function pbNewGame() {
   pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
   if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
 }
-const GRID_VERSION = "2026-11-22e";   // phones on an older copy of join.html reload when this changes
+const GRID_VERSION = "2026-11-22f";   // phones on an older copy of join.html reload when this changes
 function pbWriteState() {
   if (!pb.on || !window.Live || !liveSess.code) return;
   const D = bingoDist(), n = bingo.rolls.length;

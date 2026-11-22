@@ -16,12 +16,24 @@
           "$uid": {
             ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $code + '/meta').exists()",
             ".validate": "newData.hasChild('name')",
-            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
-            "joined": { ".validate": "newData.isNumber()" },
-            "online": { ".validate": "newData.isBoolean()" },
-            "score": { ".validate": "newData.isNumber() && (newData.val() === data.val() || root.child('rooms/' + $code + '/meta/host').val() === auth.uid)" },
-            "avatar": { ".validate": "newData.isString() && newData.val().length <= 24" },
-            "$other": { ".validate": false }
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16"
+            },
+            "joined": {
+              ".validate": "newData.isNumber()"
+            },
+            "online": {
+              ".validate": "newData.isBoolean()"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && (newData.val() === data.val() || root.child('rooms/' + $code + '/meta/host').val() === auth.uid)"
+            },
+            "avatar": {
+              ".validate": "newData.isString() && newData.val().length <= 24"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         },
         "cards": {
@@ -40,7 +52,18 @@
             }
           }
         },
-        "$other": { ".validate": false }
+        "answers": {
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/host').val() === auth.uid",
+          "$uid": {
+            "$key": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms/' + $code + '/players/' + $uid).exists() && root.child('rooms/' + $code + '/state/askKey').val() === $key",
+              ".validate": "(newData.isString() && newData.val().length <= 40) || newData.isNumber()"
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "tests": {
