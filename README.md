@@ -14,11 +14,13 @@ Students join at `https://YOUR-USERNAME.github.io/grid/join`.
 | `js/firebase-config.js` | Your Firebase settings. Paste them in once. These values aren't secret. |
 | `js/live.js` | The live connection layer. All games talk to Firebase through this file. |
 | `database.rules.json` | The security rules. Paste them into Firebase → Realtime Database → Rules. |
+| `css/neon.css` | The "Quiet Neon" look: midnight-blue grid, thin lines, and glow only on what's live. Remove its `<link>` in `index.html` to get the old look back. |
+| `js/sound.js` and `audio/` | Background music (a lobby loop and a quieter game loop) and two short sounds: a player joining and a prize being won. The **Music** button in the top bar switches them on or off. The music is original and free to use. |
 
 ## How live play works
 
 1. The teacher clicks **📱 Online** on the projector and gets a 4-letter code and a QR code.
-2. Students open `…/join`, type the code and their first name, and tap Join. No accounts are needed: each phone signs in anonymously.
+2. Students open `…/join`, type the code and their first name, pick a light (a colour) and a shape, and tap Join. No accounts are needed: each phone signs in anonymously.
 3. The projector lists everyone who has joined. The teacher can remove anyone with ✕.
 4. When the session ends, the room is wiped from the database.
 

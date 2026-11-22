@@ -5,7 +5,7 @@
    Data layout (one branch per game room, keyed by a 4-letter code):
      rooms/ABCD/meta     { host, created }          who runs the room; only the host can change it
      rooms/ABCD/state    { phase, locked, ... }     what the board is showing; only the host writes it
-     rooms/ABCD/players/<id> { name, joined, online, score }   each phone writes only its own entry
+     rooms/ABCD/players/<id> { name, joined, online, score, avatar }   each phone writes only its own entry (avatar = "shape:light")
      rooms/ABCD/cards/<id>   [ ... ]                a player's card; refused once the host sets state.locked
      rooms/ABCD/marks/<id>/<cell>  "c12"            a mark: only for the number just called, only before the next call
    The rules in database.rules.json enforce all of this on Google's servers, so a phone can't cheat by
@@ -89,8 +89,9 @@
   /* ---------- a phone ---------- */
   const player = {
     code: null, name: null, _offs: [],
-    async join(code, name) {
+    async join(code, name, avatar) {
       await start();
+      avatar = /^(hex|tri|circle|square|diamond):(ice|ember|iris|jade|rose|sun)$/.test(avatar || "") ? avatar : null;   // shape:light, chosen on the join page
       code = cleanCode(code); name = cleanName(name);
       if (code.length !== 4) throw new Error("bad-code");
       if (!name) throw new Error("no-name");
@@ -103,7 +104,7 @@
       for (let k = 2; taken.has(name.toLowerCase()); k++) name = `${base} ${k}`;
       this.code = code; this.name = name;
       const me = ref(`rooms/${code}/players/${uid}`);
-      await me.update({name, joined: STAMP(), online: true});
+      await me.update({name, joined: STAMP(), online: true, ...(avatar ? {avatar} : {})});
       me.child("online").onDisconnect().set(false);
       return uid;
     },

@@ -6,12 +6,15 @@
 <title>The Grid</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=STIX+Two+Text:ital,wght@1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;600&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=STIX+Two+Text:ital,wght@1,500&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#070B12">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 120%27%3E%3Crect width=%27120%27 height=%27120%27 rx=%2724%27 fill=%27%23121B2A%27/%3E%3Cpath d=%27M40 8V112M80 8V112M8 40H112M8 80H112%27 stroke=%27%234A5D78%27 stroke-width=%276%27/%3E%3Crect x=%2784%27 y=%2710%27 width=%2726%27 height=%2726%27 rx=%276%27 fill=%27%236FE3EE%27/%3E%3C/svg%3E">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22f" defer></script>
-<script src="js/live.js?v=2026-11-22f" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22g" defer></script>
+<script src="js/live.js?v=2026-11-22g" defer></script>
+<script src="js/sound.js?v=2026-11-22g" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 /* Layout idea: an exercise-book grid as the stage, scoreboard docked along the bottom like a sports ticker; built to be read from the back of a classroom. */
@@ -625,13 +628,15 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
+<link rel="stylesheet" href="css/neon.css?v=2026-11-22g">
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="#"><span class="mark" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 1v18M13 1v18M1 7h18M1 13h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>The Grid</a>
+  <a class="brand" href="#" aria-label="The Grid: all games"><svg class="gmark" viewBox="0 0 120 120" aria-hidden="true"><rect x="2" y="2" width="116" height="116" rx="20" fill="none" stroke="#4A5D78" stroke-width="5"/><path d="M40.3 2V118M79.7 2V118M2 40.3H118M2 79.7H118" stroke="#4A5D78" stroke-width="5"/><rect x="84" y="6" width="30" height="30" rx="6" fill="#6FE3EE"/></svg><span class="the" aria-hidden="true">THE</span><span class="bar" aria-hidden="true"></span><span class="word" aria-hidden="true">GRID</span></a>
   <span class="crumb" id="crumb"></span>
   <span class="spacer"></span>
-  <div class="mode" role="group" aria-label="Play mode"><button class="btn ghost" id="offBtn" type="button" aria-pressed="true">Offline</button><button class="btn ghost live-btn" id="liveBtn" type="button" aria-haspopup="dialog" aria-pressed="false">📱 Online</button></div>
+  <div class="mode" role="group" aria-label="Play mode"><button class="btn ghost" id="offBtn" type="button" aria-pressed="true">Offline</button><button class="btn ghost live-btn" id="liveBtn" type="button" aria-haspopup="dialog" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg> Online</button></div>
+  <button class="btn ghost" id="musicBtn" type="button" aria-pressed="false" title="Background music (lobby and game loops)"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>Music</button>
   <a class="btn ghost" id="homeBtn" href="#">All games</a>
   <button class="btn ghost" id="fsBtn" type="button">Full screen</button>
 </header>
@@ -652,6 +657,17 @@ const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
 const frac = (n, d) => { const g = gcd(n, d) || 1; return d / g === 1 ? String(n / g) : `${n / g}/${d / g}`; };
 const minus = s => String(s).replace(/-/g, "−");
 let uidCounter = 0; const uid = () => ++uidCounter;
+/* Player avatars ("grid creatures"): a shape drawn in the player's light, saved by the phone as "shape:light". */
+const AV_SHAPES = {hex: "M12 2.5L20.5 7.25V16.75L12 21.5L3.5 16.75V7.25Z", tri: "M12 3L21.5 20H2.5Z", circle: "M12 3a9 9 0 1 0 0.01 0Z", square: "M4.5 4.5H19.5V19.5H4.5Z", diamond: "M12 2.5L21.5 12L12 21.5L2.5 12Z"};
+const AV_LIGHTS = {ice: "#6FE3EE", ember: "#F4A259", iris: "#A79BFF", jade: "#6EE7A8", rose: "#FF7EA8", sun: "#F2D46B"};
+const hashStr = t => { let h = 2166136261; for (const ch of String(t)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); h ^= h >>> 15; h = Math.imul(h, 2246822507); h ^= h >>> 13; return h >>> 0; };
+function avatarOf(p, id) {
+  const [sh, li] = String((p && p.avatar) || "").split(":");
+  const h = hashStr(id || (p && p.name) || "");
+  return {shape: AV_SHAPES[sh] ? sh : Object.keys(AV_SHAPES)[h % 5], light: AV_LIGHTS[li] || Object.values(AV_LIGHTS)[(h >> 3) % 6]};
+}
+const AV = (p, id, size = 22) => { const a = avatarOf(p, id); return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="${AV_SHAPES[a.shape]}" fill="none" stroke="${a.light}" stroke-width="1.9" stroke-linejoin="round"/></svg>`; };
+const PHONE = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>`;
 
 /* Maths-lite markup: x^2, x^{-1}, log_2, log_{10}, Σ_{r=1}^{n}, M(a,b,c,d) for a 2×2 matrix */
 function fmt(s) {
@@ -840,7 +856,7 @@ const motionBtn = id => `<button type="button" class="btn" id="${id}" aria-press
 function bindMotion(id, rerun) { const b = $("#" + id); if (b) b.onclick = () => { diceMotion = !diceMotion; store.set("diceMotion", diceMotion); rerun(); }; }
 
 /* ================= teams & scoreboard ================= */
-const TC = ["#1F4FE0", "#D9530A", "#0E8F6E", "#B8155A", "#7442D1", "#9A7400"];
+const TC = ["#6FE3EE", "#F4A259", "#A79BFF", "#6EE7A8", "#FF7EA8", "#F2D46B"];   // Quiet Neon lights: Ice, Ember, Iris, Jade, Rose, Sun
 const defaultTeams = n => Array.from({length: n}, (_, i) => ({name: "Team " + (i + 1), score: 0}));
 let teams = store.get("teams", null);
 if (!Array.isArray(teams) || !teams.length) teams = defaultTeams(4);
@@ -953,7 +969,7 @@ function renderOnlineBoard(sb) {
     const list = ids.map(id => ({id, p: livePts(id)})).sort((a, b) => b.p - a.p || String(P[a.id].name).localeCompare(String(P[b.id].name)));
     body = `<div class="sb-rank" id="oRank">${list.map(({id, p}) => {
       const r = 1 + list.filter(x => x.p > p).length, tie = list.filter(x => x.p === p).length > 1;
-      return `<div class="sb-p ${r <= 3 && p > 0 ? "r" + r : ""} ${shownPts[id] != null && p > shownPts[id] ? "up" : ""} ${P[id].online === false ? "off" : ""}"><span class="rk">${p > 0 ? (tie ? "=" : "") + ordinal(r) : "–"}</span><b>${esc(P[id].name || "?")}</b><span class="sc">${p}</span></div>`; }).join("")}</div>`;
+      return `<div class="sb-p ${r <= 3 && p > 0 ? "r" + r : ""} ${shownPts[id] != null && p > shownPts[id] ? "up" : ""} ${P[id].online === false ? "off" : ""}"><span class="rk">${p > 0 ? (tie ? "=" : "") + ordinal(r) : "–"}</span>${AV(P[id], id, 20)}<b>${esc(P[id].name || "?")}</b><span class="sc">${p}</span></div>`; }).join("")}</div>`;
   } else {
     body = online.teams.map((t, i) => { const m = membersOf(i);
       return `<div class="sb-oteam" style="--tc:${TC[i]}" data-i="${i}"><span class="tn">${esc(t.name)}</span><span class="sc">${minus(t.score)}</span><span class="mem">${m.length ? m.map(id => esc(P[id].name || "?")).join(", ") : "Nobody yet"}</span><span class="pm"><button type="button" data-pm="1" data-i="${i}" aria-label="Give ${esc(t.name)} a point (each player gets one too)">+</button><button type="button" data-pm="-1" data-i="${i}" aria-label="Take a point from ${esc(t.name)}">−</button></span></div>`; }).join("");
@@ -1144,7 +1160,7 @@ function renderBingo(root) {
         <p class="hint">Students write <b>${pick} numbers</b> from <b>${lo} to ${hi}</b> (repeats allowed) and cross one off each time it's called. Hold Space for fast rolls.</p>`}
       </div>
       <div class="panel">
-        <div class="seg" role="group" aria-label="View" style="align-self:flex-start">${[...(pb.on ? [["phones", "📱 Phones"]] : []), ["tally", "Tally chart"], ["space", "Sample space"]].map(([k, l]) => `<button type="button" data-view="${k}" class="${bingo.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
+        <div class="seg" role="group" aria-label="View" style="align-self:flex-start">${[...(pb.on ? [["phones", PHONE + " Phones"]] : []), ["tally", "Tally chart"], ["space", "Sample space"]].map(([k, l]) => `<button type="button" data-view="${k}" class="${bingo.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
         <div class="bview" id="bView">${bingoViewHTML(D, n, last)}</div>
       </div>
     </div>
@@ -1252,7 +1268,7 @@ const pk = {on: false, gameId: 0, pl: {}, potAt: {}, seen: {}, subscribed: false
 const pkKey = () => `r${skunk.round}c${skunk.rolls}`;
 function pkButton() {
   if (!liveSess.code) return "";
-  return pk.on ? `<button type="button" class="btn live-on" id="pkBtn">📱 Phones on</button>` : `<button type="button" class="btn primary" id="pkBtn">📱 Play on phones</button>`;
+  return pk.on ? `<button type="button" class="btn live-on" id="pkBtn">${PHONE} Phones on</button>` : `<button type="button" class="btn primary" id="pkBtn">${PHONE} Play on phones</button>`;
 }
 function pkSync() {                         // every player who has joined gets a seat; late arrivals play from the next round
   Object.keys(liveSess.players).forEach(id => {
@@ -1335,7 +1351,7 @@ function pkView() {
   return `<div class="panel-head"><h2><span class="pk-count">${standing}</span> of ${ids.length} still standing${S.pot && standing ? ` <span class="pk-risk">· ${S.pot} at risk</span>` : ""}</h2>
       <div class="controls">${S.phase === "playing" && S.pot > 0 ? `<button type="button" class="btn ghost" id="pkEnd" title="End the round now: anyone standing banks nothing">End round</button>` : ""}<button type="button" class="btn ghost" id="pkStop">${pk.stopArmed ? "Click again to stop" : "Stop phones"}</button></div></div>
     <div class="pk-grid" style="--mc:${mc}px">${order.map(id => { const p = pk.pl[id];
-      return `<div class="pk-p ${p.status}"><b>${esc(liveSess.players[id].name)}</b><span class="t">${p.total}</span><span class="s">${st(p)}</span></div>`; }).join("") || `<p class="muted">Nobody's joined yet.</p>`}</div>`;
+      return `<div class="pk-p ${p.status}"><b>${AV(liveSess.players[id], id, 16)} ${esc(liveSess.players[id].name)}</b><span class="t">${p.total}</span><span class="s">${st(p)}</span></div>`; }).join("") || `<p class="muted">Nobody's joined yet.</p>`}</div>`;
 }
 
 function renderSkunk(root) {
@@ -2032,8 +2048,8 @@ function bbBoard() {
   out += `<rect x="${pad + s * 0.5}" y="2" width="${W - s}" height="12" rx="6" fill="${TC[bb.B]}"/><rect x="${pad + s * 0.5}" y="${H + 2 * pad - 14}" width="${W - s}" height="12" rx="6" fill="${TC[bb.B]}"/>`;
   bb.cells.forEach((cell, i) => {
     const c = i % BB_C, r = Math.floor(i / BB_C), x = cx(c), y = cy(c, r);
-    const fill = cell.owner === "A" ? TC[bb.A] : cell.owner === "B" ? TC[bb.B] : i === bb.open ? "var(--hi)" : "var(--surface)";
-    const ink = cell.owner ? "#fff" : i === bb.open ? "var(--hi-ink)" : "var(--ink)";
+    const fill = cell.owner === "A" ? TC[bb.A] : cell.owner === "B" ? TC[bb.B] : i === bb.open ? "var(--hi)" : "#18243A";
+    const ink = cell.owner ? "#06090F" : i === bb.open ? "var(--hi-ink)" : "var(--ink)";
     out += `<g class="hex ${bb.path.includes(i) ? "path" : ""}" data-hex="${i}" tabindex="${cell.owner || bb.winner ? -1 : 0}" role="button" aria-label="Hexagon ${esc(cell.l)}${cell.owner ? ", won" : ""}">
       <polygon points="${poly(x, y)}" style="fill:${fill}"/><text x="${x}" y="${y + 2}" style="fill:${ink}">${esc(cell.l)}</text></g>`;
   });
@@ -2511,7 +2527,7 @@ function renderAuction(root) {
         ${ev.phase === "bid" ? `
           <p class="hint">Run an open auction: teams shout bids, and the highest bid wins the lot. Every team starts with ${ev.budget} coins.</p>
           <p class="label" style="margin:0">Winning team</p>
-          <div class="controls">${teams.map((t, i) => `<button type="button" class="tbtn" style="--tc:${TC[i]};${ev.buyer === i ? `background:${TC[i]};color:#fff` : ""}" data-buyer="${i}" aria-pressed="${ev.buyer === i}">${esc(t.name)}</button>`).join("")}</div>
+          <div class="controls">${teams.map((t, i) => `<button type="button" class="tbtn" style="--tc:${TC[i]};${ev.buyer === i ? `background:${TC[i]};color:#06090F` : ""}" data-buyer="${i}" aria-pressed="${ev.buyer === i}">${esc(t.name)}</button>`).join("")}</div>
           <label class="label" for="evPrice" style="margin:0">Winning bid</label>
           <div class="machine"><input id="evPrice" inputmode="numeric" value="${esc(ev.price)}" placeholder="0" autocomplete="off"></div>
           ${ev.err ? `<p class="msg bad">${esc(ev.err)}</p>` : ""}
@@ -2773,7 +2789,7 @@ function joinURL(code) {
 let offArmed = false;
 function liveRenderBtn() {
   const b = $("#liveBtn"), o = $("#offBtn"), n = Object.keys(liveSess.players).length;
-  b.textContent = liveSess.code ? `📱 Online · ${liveSess.code} · ${n} joined` : "📱 Online";
+  b.innerHTML = liveSess.code ? `${PHONE} Online · ${liveSess.code} · ${n} joined` : `${PHONE} Online`;
   b.classList.toggle("on", !!liveSess.code); b.setAttribute("aria-pressed", !!liveSess.code);
   o.setAttribute("aria-pressed", !liveSess.code); o.classList.toggle("armed", offArmed);
   o.textContent = offArmed ? "Click again to go offline" : "Offline";
@@ -2784,45 +2800,60 @@ $("#offBtn").addEventListener("click", () => {
   if (!offArmed) { offArmed = true; liveRenderBtn(); setTimeout(() => { offArmed = false; liveRenderBtn(); }, 3500); return; }
   offArmed = false; liveEnd();
 });
+/* who joined when: the newest arrivals glow for a few seconds and a chime plays (not for people already there after a refresh) */
+const lobbySeen = {ready: false, at: {}};
+function liveNoteJoins(P) {
+  const fresh = Object.keys(P).filter(id => !(id in lobbySeen.at));
+  fresh.forEach(id => lobbySeen.at[id] = lobbySeen.ready ? Date.now() : 0);
+  const chime = lobbySeen.ready && fresh.length > 0;
+  lobbySeen.ready = true;
+  if (!chime) return;
+  if (window.Sound) Sound.sting("join");
+  setTimeout(() => { if (!$("#liveDlg").hidden) liveRenderPlayers(); }, 6100);   // the glow fades after 6 seconds
+}
 function liveRenderPlayers() {
   const box = $("#ldPlayers"); if (!box) return;
   const list = Object.entries(liveSess.players).sort((a, b) => (a[1].joined || 0) - (b[1].joined || 0));
-  box.innerHTML = list.map(([id, p]) => `<span class="ld-p ${p.online === false ? "off" : ""}"><span class="dot" aria-hidden="true"></span>${esc(p.name || "?")}<button type="button" data-kick="${esc(id)}" aria-label="Remove ${esc(p.name || "player")}" title="Remove">✕</button></span>`).join("")
-    || `<p class="muted">Nobody yet. Students scan the code or go to the link and type the code.</p>`;
+  const now = Date.now();
+  box.innerHTML = list.map(([id, p]) => `<span class="ld-p ${p.online === false ? "off" : ""} ${now - (lobbySeen.at[id] || 0) < 6000 ? "new" : ""}">${AV(p, id, 24)}<span class="nm">${esc(p.name || "?")}</span><button type="button" data-kick="${esc(id)}" aria-label="Remove ${esc(p.name || "player")}" title="Remove"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button></span>`).join("")
+    || `<p class="muted">Nobody yet. Students scan the code, or go to the link and type the code.</p>`;
   const c = $("#ldCount"); if (c) c.textContent = list.length;
+  const f = $("#lbFloor");
+  if (f) f.innerHTML = list.filter(([, p]) => p.online !== false).map(([id, p]) => { const h = hashStr(id); const d = ((h >> 7) % 100) / 100; return `<i style="--c:${avatarOf(p, id).light};--d:${(0.15 + 0.85 * d).toFixed(2)};left:${h % 100}%;top:${(8 + 80 * d).toFixed(0)}%"></i>`; }).join("");
 }
 function liveRenderDlg() {
   const box = $("#liveBox"), S = liveSess;
+  $("#liveDlg").classList.toggle("lobby", !!S.code);
   const head = t => `<div class="ldlg-head"><div><p class="eyebrow">Live play</p><h2 id="ldTitle">${t}</h2></div><button type="button" class="btn ghost" id="ldClose">Close</button></div>`;
   if (!S.code) {
     box.innerHTML = head("Let students join on their phones") + `
-      <p class="hint">Start a session and students join with a code. They don't need an account: just a name. The session stays open while you move between games.</p>
+      <p class="hint">Start a session and students join with a code. They don't need an account: just a name, a light and a shape. The session stays open while you move between games.</p>
       ${S.err ? `<p class="msg bad">${esc(S.err)}</p>` : ""}
       <div class="controls"><button type="button" class="btn primary xl" id="ldStart" ${S.status === "starting" ? "disabled" : ""}>${S.status === "starting" ? "Starting…" : "Start a live session"}</button></div>`;
   } else {
     const url = joinURL(S.code);
-    box.innerHTML = head("Join the game") + `
-      <div class="ld-grid">
-        <div class="ld-join">
-          <span class="label">Go to</span><span class="ld-url">${esc(url.replace(/^https?:\/\//, "").replace(/\?code=.*/, ""))}</span>
-          <span class="label">and type</span><span class="ld-code">${S.code}</span>
-          <div class="ld-qr" id="ldQR" aria-label="QR code for the join link"></div><span class="muted">or scan to join</span>
+    box.innerHTML = `<div class="lb-floor" aria-hidden="true"></div><div class="lb-lights" id="lbFloor" aria-hidden="true"></div>` + head("Get on the Grid") + `
+      <div class="lb-grid">
+        <div class="lb-join">
+          <div class="lb-go"><span class="label">Go to</span><span class="lb-url">${esc(url.replace(/^https?:\/\//, "").replace(/\?code=.*/, ""))}</span></div>
+          <div class="lb-go"><span class="label">Type the code</span><div class="lb-code" role="img" aria-label="Code ${S.code.split("").join(" ")}">${S.code.split("").map(ch => `<span>${ch}</span>`).join("")}</div></div>
+          <div class="lb-qr"><div class="ld-qr" id="ldQR" aria-label="QR code for the join link"></div><p>Or scan this. One phone each, and a name your teacher will recognise.</p></div>
         </div>
-        <div class="panel" style="box-shadow:none">
-          <div class="panel-head"><h2><span class="ld-count" id="ldCount">0</span> joined</h2></div>
+        <div>
+          <div class="lb-count"><span class="ld-count" id="ldCount">0</span><span>on the Grid</span></div>
           <div class="ld-players" id="ldPlayers"></div>
-          <p class="hint">A grey name has lost connection. They rejoin automatically when they reopen the page. ✕ removes someone.</p>
+          <p class="hint" style="margin-top:10px">A faded name has lost connection; they rejoin when they reopen the page. The cross removes someone.</p>
         </div>
       </div>
-      <div class="controls"><button type="button" class="btn primary" id="ldDone">Back to the game</button><button type="button" class="btn ghost" id="ldEnd">${S.endArmed ? "Click again to end for everyone" : "End the session"}</button></div>`;
+      <div class="lb-foot"><button type="button" class="btn ghost" id="ldEnd">${S.endArmed ? "Click again to end for everyone" : "End the session"}</button><button type="button" class="btn primary" id="ldDone">Back to the game</button></div>`;
     const qr = $("#ldQR");
-    if (qr && window.QRCode) { try { new QRCode(qr, {text: url, width: 200, height: 200, colorDark: "#131A2C", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M}); } catch (e) {} }
+    if (qr && window.QRCode) { try { new QRCode(qr, {text: url, width: 156, height: 156, colorDark: "#0B1220", colorLight: "#F3F6F9", correctLevel: QRCode.CorrectLevel.M}); } catch (e) {} }
     liveRenderPlayers();
   }
   liveRenderBtn();
 }
-function liveOpen() { $("#liveDlg").hidden = false; liveRenderDlg(); const c = $("#ldClose"); if (c) c.focus(); }
-function liveClose() { $("#liveDlg").hidden = true; liveSess.endArmed = false; $("#liveBtn").focus(); }
+function liveOpen() { $("#liveDlg").hidden = false; liveRenderDlg(); const c = $("#ldClose"); if (c) c.focus(); if (window.Sound) Sound.scene("lobby"); }
+function liveClose() { $("#liveDlg").hidden = true; liveSess.endArmed = false; $("#liveBtn").focus(); if (window.Sound) Sound.scene(current ? "focus" : "lobby"); }
 async function liveBegin(prefer) {
   if (!window.Live) { liveSess.err = LIVE_ERR["not-configured"]; return liveRenderDlg(); }
   liveSess.status = "starting"; liveSess.err = ""; liveRenderDlg();
@@ -2832,7 +2863,7 @@ async function liveBegin(prefer) {
     Object.assign(liveSess, {code, status: "on", players: {}, points: {}});
     store.set("liveCode", code);
     onlineOn = true; applyMode();
-    Live.host.onPlayers(p => { liveSess.players = p; placeNewPlayers(); liveRenderPlayers(); liveRenderBtn(); renderScoreboard(); teamDlgRender(); pbRefresh(); pkRefresh(); });
+    Live.host.onPlayers(p => { liveNoteJoins(p); liveSess.players = p; placeNewPlayers(); liveRenderPlayers(); liveRenderBtn(); renderScoreboard(); teamDlgRender(); pbRefresh(); pkRefresh(); });
     pushTeams(); renderScoreboard(); rerender();
   } catch (e) { liveSess.status = "idle"; liveSess.err = liveErrText(e); store.set("liveCode", null); }
   if (!$("#liveDlg").hidden) liveRenderDlg(); else liveRenderBtn();
@@ -2840,6 +2871,7 @@ async function liveBegin(prefer) {
 async function liveEnd() {
   try { await Live.host.end(); } catch (e) {}
   Object.assign(liveSess, {code: null, players: {}, points: {}, status: "idle", endArmed: false});
+  lobbySeen.ready = false; lobbySeen.at = {};
   Object.assign(pb, {on: false, subscribed: false, cards: {}, marks: {}});
   Object.assign(pk, {on: false, subscribed: false, open: false});
   if (bingo.view === "phones") bingo.view = "tally";
@@ -2871,8 +2903,8 @@ const pbPts = id => livePts(id);
 const pbName = id => (pbPlayers()[id] && pbPlayers()[id].name) || "?";
 const pbCard = id => { const c = pb.cards[id]; if (!c) return null; const a = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => c[i]); return a.every(v => typeof v === "number") ? a : null; };
 function pbButton() {
-  if (!liveSess.code) return `<button type="button" class="btn ghost" id="pbBtn" title="Start a live session first">📱 Play on phones</button>`;
-  return pb.on ? `<button type="button" class="btn live-on" id="pbBtn">📱 Phones on</button>` : `<button type="button" class="btn primary" id="pbBtn">📱 Play on phones</button>`;
+  if (!liveSess.code) return `<button type="button" class="btn ghost" id="pbBtn" title="Start a live session first">${PHONE} Play on phones</button>`;
+  return pb.on ? `<button type="button" class="btn live-on" id="pbBtn">${PHONE} Phones on</button>` : `<button type="button" class="btn primary" id="pbBtn">${PHONE} Play on phones</button>`;
 }
 function pbSubscribe() {
   if (pb.subscribed || !window.Live || !liveSess.code) return;
@@ -2886,7 +2918,7 @@ function pbNewGame() {
   pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
   if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
 }
-const GRID_VERSION = "2026-11-22f";   // phones on an older copy of join.html reload when this changes
+const GRID_VERSION = "2026-11-22g";   // phones on an older copy of join.html reload when this changes
 function pbWriteState() {
   if (!pb.on || !window.Live || !liveSess.code) return;
   const D = bingoDist(), n = bingo.rolls.length;
@@ -2979,10 +3011,10 @@ function pbView() {
     <div class="pb-grid" style="--mc:${mc}px">${rows.map(({id, card, m, pts, togo, near}) => {
       const miss = card ? missed(card, m) : [], close = playing && togo === 1;
       return `<div class="pb-p ${close ? "close" : waiting.has(id) ? "waiting" : ""}">
-        <div class="pb-top"><b>${esc(pbName(id))}</b><span class="pb-pts">${pts}</span></div>
+        <div class="pb-top"><b>${AV(liveSess.players[id], id, 16)} ${esc(pbName(id))}</b><span class="pb-pts">${pts}</span></div>
         ${card ? `<div class="mcard">${card.map((v, i) => `<span class="${m[i] ? "hit" : miss[i] ? "miss" : ""}">${v}</span>`).join("")}</div>` : `<div class="mcard empty">${n ? "Next game" : "No card<br>yet"}</div>`}
         ${card && playing ? `<div class="pb-togo">${close ? "1 to go: " + PB_SHORT[near] : togo + " to go"}</div>` : ""}
-      </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Press 📱 Online at the top to show the code.</p>`}</div>`;
+      </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Press Online at the top to show the code.</p>`}</div>`;
 }
 function pbRefresh() {
   if (current !== "bingo") return;
@@ -2990,6 +3022,7 @@ function pbRefresh() {
   const h = $("#pbHint"); if (h) h.innerHTML = pbHint();
 }
 function announce(text, big) {
+  if (window.Sound) Sound.sting("prize");
   const el = document.createElement("div"); el.className = "announce" + (big ? " big" : ""); el.setAttribute("role", "status"); el.textContent = text;
   document.body.appendChild(el);
   setTimeout(() => el.classList.add("out"), big ? 4500 : 3000); setTimeout(() => el.remove(), big ? 5100 : 3600);
@@ -3007,6 +3040,7 @@ function route() {
   $("#homeBtn").style.display = current ? "" : "none";
   $("#app").scrollTop = 0;
   rerender();
+  if (window.Sound && $("#liveDlg").hidden) Sound.scene(current ? "focus" : "lobby");
 }
 document.addEventListener("keydown", e => {
   if (e.target.closest && e.target.closest("input,textarea,select")) return;
