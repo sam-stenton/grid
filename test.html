@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connection check · The Grid</title>
+<style>
+:root{--paper:#F5F7FB;--surface:#fff;--ink:#131A2C;--muted:#56607A;--line:#D5DBE7;--good:#0E7F57;--bad:#C62828;--warn:#9A6700;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#0E1320;--surface:#161D2E;--ink:#E9EDF6;--muted:#9BA5BB;--line:#2A3449;--good:#3CC48C;--bad:#FF6B6B;--warn:#E3B341;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;padding:20px}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-size:30px;margin:0}
+p{margin:0}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+li{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:12px}
+li b{display:block}
+li small{color:var(--muted)}
+.i{font-size:22px;line-height:1.1;text-align:center}
+.ok{border-color:var(--good)} .ok .i{color:var(--good)}
+.no{border-color:var(--bad)} .no .i{color:var(--bad)}
+.verdict{font-weight:700;font-size:20px;padding:14px;border-radius:12px;border:2px solid var(--ink);background:var(--surface)}
+button{font:inherit;font-weight:700;padding:12px 18px;border-radius:12px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+  <h1>Connection check</h1>
+  <p>Open this on a student phone connected to the college Wi-Fi. It checks each part of live play in turn.</p>
+  <ol id="steps"></ol>
+  <div class="verdict" id="verdict">Checking…</div>
+  <button type="button" id="again">Run the check again</button>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
+<script src="js/firebase-config.js" defer></script>
+<script src="js/live.js" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const STEPS = [
+    ["page", "This page loaded", "So GitHub Pages is reachable on this network."],
+    ["sdk", "Google's Firebase code loaded", "From www.gstatic.com."],
+    ["config", "Firebase settings found", "From js/firebase-config.js."],
+    ["auth", "Signed in anonymously", "No account or personal details are used."],
+    ["db", "Sent and received live data", "The real-time connection to the database."],
+  ];
+  const el = document.getElementById("steps"), verdict = document.getElementById("verdict");
+  const mark = (k, ok, note) => { const li = document.querySelector(`[data-k="${k}"]`); li.className = ok ? "ok" : "no"; li.querySelector(".i").textContent = ok ? "✓" : "✕"; if (note) li.querySelector("small").textContent = note; };
+  async function run() {
+    el.innerHTML = STEPS.map(([k, t, n]) => `<li data-k="${k}"><span class="i">…</span><span><b>${t}</b><small>${n}</small></span></li>`).join("");
+    verdict.textContent = "Checking…";
+    mark("page", true);
+    const sdk = typeof firebase !== "undefined" && firebase.database && firebase.auth;
+    mark("sdk", !!sdk, sdk ? null : "Blocked or failed to load. The Wi-Fi filter may block www.gstatic.com.");
+    const cfg = window.Live && Live.configured;
+    mark("config", !!cfg, cfg ? null : "The settings haven't been pasted in yet.");
+    if (!sdk || !cfg) { verdict.textContent = "Live play can't run here yet. See the red step above."; return; }
+    try { await Live.start(); mark("auth", true); }
+    catch (e) { mark("auth", false, "Failed: " + (e.code || e.message) + ". Check Anonymous sign-in is turned on in Firebase."); verdict.textContent = "Live play can't run here yet."; return; }
+    try {
+      const r = await Live.roundTrip();
+      mark("db", r.ok, `Round trip ${r.ms} ms. ${r.ms < 400 ? "Fast." : r.ms < 1200 ? "Fine for games." : "Slow: games will lag."}`);
+      verdict.textContent = r.ok ? "All good. Students can join live games on this network." : "The database answered strangely. Try again.";
+    } catch (e) {
+      mark("db", false, "Failed: " + (e.code || e.message) + ". The Wi-Fi may block *.firebasedatabase.app, or the database rules haven't been published.");
+      verdict.textContent = "Live play can't run here yet.";
+    }
+  }
+  document.getElementById("again").onclick = run;
+  run();
+});
+</script>
+</body>
+</html>
