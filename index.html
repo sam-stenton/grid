@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js" defer></script>
-<script src="js/live.js" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22c" defer></script>
+<script src="js/live.js?v=2026-11-22c" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 /* Layout idea: an exercise-book grid as the stage, scoreboard docked along the bottom like a sports ticker; built to be read from the back of a classroom. */
@@ -470,7 +470,7 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
 .mcard span{display:grid;place-items:center;aspect-ratio:1;border:1.5px solid var(--line);border-radius:6px;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
 .mcard span.hit{background:var(--good);border-color:var(--good);color:#fff}
 .mcard span.miss{border:2px dashed var(--bad);color:var(--bad)}
-.mcard.empty{display:grid;place-items:center;aspect-ratio:1;border:1.5px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13px;text-align:center}
+.mcard.empty{display:grid;place-items:center;aspect-ratio:1;border:1.5px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13px;line-height:1.3;text-align:center;padding:4px}
 .announce{position:fixed;left:50%;top:18%;transform:translate(-50%,0);z-index:70;background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:clamp(34px,4vw,60px);padding:18px 34px;border-radius:20px;border:4px solid var(--hi);box-shadow:8px 8px 0 rgba(0,0,0,.35);text-align:center;max-width:90vw;animation:annIn .45s cubic-bezier(.2,1.5,.4,1)}
 .announce.big{font-size:clamp(48px,6vw,96px);background:var(--hi);color:var(--hi-ink);border-color:var(--ink)}
 .announce.out{opacity:0;transition:opacity .5s ease}
@@ -2504,11 +2504,12 @@ function pbNewGame() {
   pb.prize = "line"; pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
   if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
 }
+const GRID_VERSION = "2026-11-22c";   // phones on an older copy of join.html reload when this changes
 function pbWriteState() {
   if (!pb.on || !window.Live || !liveSess.code) return;
   const D = bingoDist(), n = bingo.rolls.length;
   const winners = {}; PB_PRIZES.forEach(([k]) => { if (pb.winners[k]) winners[k] = pb.winners[k].map(id => ({id, name: pbName(id)})); });
-  Live.host.setState({
+  Live.host.setState({v: GRID_VERSION, 
     game: "bingo", gameId: pb.gameId, phase: !n ? "lobby" : pb.prize === "done" ? "over" : "playing", locked: n > 0,
     cfg: {title: bingoTitle(), lo: D.rows[0][0], hi: D.rows[D.rows.length - 1][0]},
     ncalls: n, callKey: n ? "c" + n : "", last: n ? bingo.rolls[n - 1] : -1, calls: bingo.rolls.slice(),
@@ -2580,7 +2581,7 @@ function pbView() {
       const miss = card ? missed(card, m) : [];
       return `<div class="pb-p ${waiting.has(id) ? "waiting" : ""}">
         <div class="pb-top"><b>${esc(pbName(id))}</b><span class="pb-pts">${pts}</span></div>
-        ${card ? `<div class="mcard">${card.map((v, i) => `<span class="${m[i] ? "hit" : miss[i] ? "miss" : ""}">${v}</span>`).join("")}</div>` : `<div class="mcard empty">${n ? "Next game" : "Making a card…"}</div>`}
+        ${card ? `<div class="mcard">${card.map((v, i) => `<span class="${m[i] ? "hit" : miss[i] ? "miss" : ""}">${v}</span>`).join("")}</div>` : `<div class="mcard empty">${n ? "Next game" : "No card<br>yet"}</div>`}
       </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Open 📱 Live at the top to show the code.</p>`}</div>`;
 }
 function pbRefresh() {
