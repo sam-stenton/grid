@@ -7,6 +7,7 @@
      rooms/ABCD/state    { phase, locked, ... }     what the board is showing; only the host writes it
      rooms/ABCD/players/<id> { name, joined, online, score }   each phone writes only its own entry
      rooms/ABCD/cards/<id>   [ ... ]                a player's card; refused once the host sets state.locked
+     rooms/ABCD/marks/<id>/<cell>  "c12"            a mark: only for the number just called, only before the next call
    The rules in database.rules.json enforce all of this on Google's servers, so a phone can't cheat by
    editing the page. */
 (function () {
@@ -52,7 +53,7 @@
         });
         if (!res.committed) continue;
         this.code = code;
-        if (!resumed) await ref(`rooms/${code}`).update({state: null, players: null, cards: null});   // clear anything left from an old room
+        if (!resumed) await ref(`rooms/${code}`).update({state: null, players: null, cards: null, marks: null});   // clear anything left from an old room
         const st = await ref(`rooms/${code}/state`).once("value");
         if (!st.exists()) await this.setState({phase: "lobby", game: null, locked: false});
         return code;
@@ -65,14 +66,17 @@
     },
     onPlayers(cb) { this._listen("players", cb); },
     onCards(cb) { this._listen("cards", cb); },
+    onMarks(cb) { this._listen("marks", cb); },
+    setScore(id, n) { return ref(`rooms/${this.code}/players/${id}`).update({score: n}); },
+    clearGame() { return ref(`rooms/${this.code}`).update({cards: null, marks: null}); },
     setState(obj) { return ref(`rooms/${this.code}/state`).set({...obj, t: STAMP()}); },
     updateState(patch) { return ref(`rooms/${this.code}/state`).update({...patch, t: STAMP()}); },
-    kick(id) { return ref(`rooms/${this.code}`).update({[`players/${id}`]: null, [`cards/${id}`]: null}); },
+    kick(id) { return ref(`rooms/${this.code}`).update({[`players/${id}`]: null, [`cards/${id}`]: null, [`marks/${id}`]: null}); },
     clearCards() { return ref(`rooms/${this.code}/cards`).remove(); },
     async end() {
       const code = this.code; if (!code) return;
       this._offs.forEach(f => f()); this._offs = []; this.code = null;
-      await ref(`rooms/${code}`).update({state: null, players: null, cards: null});
+      await ref(`rooms/${code}`).update({state: null, players: null, cards: null, marks: null});
       await ref(`rooms/${code}/meta`).remove();
     },
   };
@@ -104,11 +108,14 @@
     },
     onState(cb) { this._listen("state", cb); },                   // null means the room has closed
     onMe(cb) { this._listen(`players/${uid}`, cb); },             // null means the teacher removed you
+    onCard(cb) { this._listen(`cards/${uid}`, cb); },
+    onMarks(cb) { this._listen(`marks/${uid}`, cb); },
     setCard(card) { return ref(`rooms/${this.code}/cards/${uid}`).set(card); },
-    setScore(n) { return ref(`rooms/${this.code}/players/${uid}`).update({score: n}); },
+    /* The database accepts a mark only if it's for the number just called and that cell holds it. */
+    mark(cell, callKey) { return ref(`rooms/${this.code}/marks/${uid}/${cell}`).set(callKey); },
     async leave() {
       const code = this.code; this._offs.forEach(f => f()); this._offs = []; this.code = null;
-      if (code && uid) { try { await ref(`rooms/${code}`).update({[`players/${uid}`]: null, [`cards/${uid}`]: null}); } catch (e) {} }
+      if (code && uid) { try { await ref(`rooms/${code}`).update({[`players/${uid}`]: null, [`cards/${uid}`]: null, [`marks/${uid}`]: null}); } catch (e) {} }
     },
   };
 

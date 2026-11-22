@@ -452,6 +452,30 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
   .hex-grid,.ab-grid,.hl-stage{grid-template-columns:1fr}
 }
 
+/* ---------- phone bingo ---------- */
+.btn.live-on{background:var(--good);border-color:var(--good);color:#fff}
+.pb-prizes{display:flex;gap:8px;flex-wrap:wrap}
+.pb-prize{padding:6px 12px;border:2px solid var(--line);border-radius:999px;font-size:15px;color:var(--muted)}
+.pb-prize.cur{border-color:var(--accent);color:var(--ink);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.pb-prize.won{border-color:var(--good);color:var(--ink);background:color-mix(in srgb,var(--good) 16%,transparent)}
+.pb-wait{margin:0;font-size:20px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--hi) 30%,transparent)}
+.pb-wait.ok{background:color-mix(in srgb,var(--good) 14%,transparent)}
+.pb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;overflow:auto;min-height:0;flex:1;align-content:start;padding:2px}
+.pb-p{border:2px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.pb-p.waiting{border-color:var(--hi);box-shadow:0 0 0 2px var(--hi)}
+.pb-top{display:flex;justify-content:space-between;gap:6px;align-items:baseline;font-size:15px;min-width:0}
+.pb-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pb-pts{font-family:var(--display);font-weight:900;font-size:22px;color:var(--accent)}
+.mcard{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.mcard span{display:grid;place-items:center;aspect-ratio:1;border:1.5px solid var(--line);border-radius:6px;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+.mcard span.hit{background:var(--good);border-color:var(--good);color:#fff}
+.mcard span.miss{border:2px dashed var(--bad);color:var(--bad)}
+.mcard.empty{display:grid;place-items:center;aspect-ratio:1;border:1.5px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13px;text-align:center}
+.announce{position:fixed;left:50%;top:18%;transform:translate(-50%,0);z-index:70;background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:clamp(34px,4vw,60px);padding:18px 34px;border-radius:20px;border:4px solid var(--hi);box-shadow:8px 8px 0 rgba(0,0,0,.35);text-align:center;max-width:90vw;animation:annIn .45s cubic-bezier(.2,1.5,.4,1)}
+.announce.big{font-size:clamp(48px,6vw,96px);background:var(--hi);color:var(--hi-ink);border-color:var(--ink)}
+.announce.out{opacity:0;transition:opacity .5s ease}
+@keyframes annIn{from{transform:translate(-50%,0) scale(.6);opacity:0}to{transform:translate(-50%,0) scale(1);opacity:1}}
+
 /* ---------- live session dialog ---------- */
 .live-btn.on{background:var(--good);border-color:var(--good);color:#fff}
 .ldlg{position:fixed;inset:0;background:rgba(8,12,22,.55);display:grid;place-items:center;z-index:60;padding:16px}
@@ -862,7 +886,7 @@ function renderBingo(root) {
   <section class="game fit">
     <div class="game-head">
       <div><p class="eyebrow">Any level · GCSE content · whole class</p><h1>Probability Bingo</h1></div>
-      <div class="controls"><button type="button" class="btn" id="bSet" aria-expanded="${bingo.setOpen}">⚙ ${bingo.n} × d${bingo.sides}${bingo.n > 1 ? " · " + opName(bingo.op, bingo.n) : ""}</button><button type="button" class="btn ghost" id="bNew">New game</button></div>
+      <div class="controls">${pbButton()}<button type="button" class="btn" id="bSet" aria-expanded="${bingo.setOpen}">⚙ ${bingo.n} × d${bingo.sides}${bingo.n > 1 ? " · " + opName(bingo.op, bingo.n) : ""}</button><button type="button" class="btn ghost" id="bNew">New game</button></div>
     </div>
     ${bingo.setOpen ? `<div class="panel setbar">
       <div class="set-row"><span class="label">Number of dice</span><div class="seg sm" role="group" aria-label="Number of dice">${[1, 2, 3].map(k => `<button type="button" data-n="${k}" class="${bingo.n === k ? "on" : ""}">${k}</button>`).join("")}</div></div>
@@ -876,26 +900,26 @@ function renderBingo(root) {
         ${diceTray(bingo.pose, "bDice", "", bingo.sides)}
         <div class="callout"><span class="label">${esc(bingoTitle())}</span><span class="big ${bingo.pop ? "pop" : ""}" id="bVal">${last === null ? "–" : last}</span></div>
         <button type="button" class="btn primary xl" id="bRoll" ${bingo.auto ? "disabled" : ""}>Roll<kbd>Space</kbd></button>
-        <div class="fast">
+        ${pb.on ? `<p class="hint" id="pbHint">${pbHint()}</p>` : `<div class="fast">
           <button type="button" class="btn ${bingo.auto ? "rigged" : ""}" id="bAuto">${bingo.auto ? "■ Stop" : "▶ Auto-roll"}</button>
           <div class="seg sm" role="group" aria-label="Auto-roll speed">${[[5, "5/s"], [50, "50/s"], [500, "500/s"]].map(([r, l]) => `<button type="button" data-rate="${r}" class="${bingo.rate === r ? "on" : ""}">${l}</button>`).join("")}</div>
         </div>
-
-        <p class="hint">Students write <b>${pick} numbers</b> from <b>${lo} to ${hi}</b> (repeats allowed) and cross one off each time it's called. Hold Space for fast rolls.</p>
+        <p class="hint">Students write <b>${pick} numbers</b> from <b>${lo} to ${hi}</b> (repeats allowed) and cross one off each time it's called. Hold Space for fast rolls.</p>`}
       </div>
       <div class="panel">
-        <div class="seg" role="group" aria-label="View" style="align-self:flex-start">${[["tally", "Tally chart"], ["space", "Sample space"]].map(([k, l]) => `<button type="button" data-view="${k}" class="${bingo.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
-        <div class="bview" id="bView">${bingo.view === "tally" ? bingoTally(D, n, last) : bingoSpace(D)}</div>
+        <div class="seg" role="group" aria-label="View" style="align-self:flex-start">${[...(pb.on ? [["phones", "📱 Phones"]] : []), ["tally", "Tally chart"], ["space", "Sample space"]].map(([k, l]) => `<button type="button" data-view="${k}" class="${bingo.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
+        <div class="bview" id="bView">${bingoViewHTML(D, n, last)}</div>
       </div>
     </div>
   </section>`;
   const rr = () => renderBingo(root);
-  root.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { bingo.n = +b.dataset.n; bingoReset(); rr(); });
-  root.querySelectorAll("[data-sides]").forEach(b => b.onclick = () => { bingo.sides = +b.dataset.sides; bingoReset(); rr(); });
-  root.querySelectorAll("[data-op]").forEach(b => b.onclick = () => { bingo.op = b.dataset.op; bingoReset(); rr(); });
+  root.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { bingo.n = +b.dataset.n; bingoReset(); if (pb.on) pbNewGame(); rr(); });
+  root.querySelectorAll("[data-sides]").forEach(b => b.onclick = () => { bingo.sides = +b.dataset.sides; bingoReset(); if (pb.on) pbNewGame(); rr(); });
+  root.querySelectorAll("[data-op]").forEach(b => b.onclick = () => { bingo.op = b.dataset.op; bingoReset(); if (pb.on) pbNewGame(); rr(); });
   root.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { bingo.view = b.dataset.view; rr(); });
   bindMotion("bMotion", rr);
-  $("#bNew").onclick = () => { bingoReset(); rr(); };
+  $("#bNew").onclick = () => { bingoReset(); if (pb.on) pbNewGame(); rr(); };
+  const pbb = $("#pbBtn"); if (pbb) pbb.onclick = () => { if (!liveSess.code) return liveOpen(); if (!pb.on) { pbStart(); rr(); } else { bingo.view = "phones"; rr(); } };
   $("#bSet").onclick = () => { bingo.setOpen = !bingo.setOpen; rr(); };
   const dn = $("#bDone"); if (dn) dn.onclick = () => { bingo.setOpen = false; rr(); };
   // the dice and the chart are redrawn many times a second during auto-roll, so their clicks are handled here, on the page
@@ -906,6 +930,7 @@ function renderBingo(root) {
     if (t.closest("#bExp")) { bingo.showExp = !bingo.showExp; return rr(); }
     if (t.closest("#ssHide")) { bingo.hide = true; bingo.shown = new Set(); bingo.sel = null; return rr(); }
     if (t.closest("#ssShow")) { bingo.hide = false; return rr(); }
+    if (t.closest("#pbStop")) { if (!pb.stopArmed) { pb.stopArmed = true; pbRefresh(); return; } pbStop(); return rr(); }
     const c = t.closest("[data-v]"); if (c) cell(c);
   };
   root.onkeydown = e => { const c = e.target.closest && e.target.closest("tr[data-v]"); if (c && e.key === "Enter") cell(c); };
@@ -917,7 +942,7 @@ function renderBingo(root) {
     const final = throwOne();
     const v = $("#bVal"); if (v) { v.classList.add("dim"); v.classList.remove("pop"); }
     $("#bRoll").disabled = true;
-    bingo.skip = roll3d($("#bDice"), final, poses => { bingo.skip = null; bingo.dice = final; bingo.pose = poses; bingo.rolls.push(bingoValue(final)); bingo.busy = false; bingo.pop = true; rr(); bingo.pop = false; }, bingo.sides);
+    bingo.skip = roll3d($("#bDice"), final, poses => { bingo.skip = null; bingo.dice = final; bingo.pose = poses; bingo.rolls.push(bingoValue(final)); bingo.busy = false; bingo.pop = true; pbAfterRoll(); rr(); bingo.pop = false; }, bingo.sides);
   };
   const quick = k => {                                                // rolls with no animation
     if (bingo.busy && bingo.skip) bingo.skip();
@@ -927,7 +952,7 @@ function renderBingo(root) {
   };
   $("#bRoll").onclick = roll;
   root.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => { bingo.rate = +b.dataset.rate; rr(); });
-  $("#bAuto").onclick = () => {
+  if ($("#bAuto")) $("#bAuto").onclick = () => {
     if (bingo.auto) { bingoStop(); rr(); return; }
     bingo.auto = true; rr();
     let last = performance.now(), acc = 0, drawn = last;
@@ -944,7 +969,7 @@ function renderBingo(root) {
   keyHandler = e => {
     if (e.code !== "Space") return;
     e.preventDefault();
-    if (e.repeat && !bingo.auto) { quick(1); rr(); }                   // holding Space rolls without animation
+    if (e.repeat && !bingo.auto) { if (pb.on) return; quick(1); rr(); }   // holding Space rolls without animation (not in phone games)
     else roll();
   };
 }
@@ -954,7 +979,11 @@ function bingoLive() {        // light redraw while auto-rolling: just the dice,
   const D = bingoDist(), n = bingo.rolls.length, last = n ? bingo.rolls[n - 1] : null;
   const v = $("#bVal"); if (v) { v.textContent = last === null ? "–" : last; v.classList.remove("dim", "pop"); }
   const tray = $("#bDice"); if (tray) tray.outerHTML = diceTray(bingo.pose, "bDice", "", bingo.sides);
-  const view = $("#bView"); if (view) view.innerHTML = bingo.view === "tally" ? bingoTally(D, n, last) : bingoSpace(D);
+  const view = $("#bView"); if (view) view.innerHTML = bingoViewHTML(D, n, last);
+}
+function bingoViewHTML(D, n, last) {
+  if (bingo.view === "phones" && pb.on) return pbView();
+  return bingo.view === "space" ? bingoSpace(D) : bingoTally(D, n, last);
 }
 function bingoStop() { bingo.auto = false; cancelAnimationFrame(bingoRaf); }
 
@@ -2423,13 +2452,17 @@ async function liveBegin(prefer) {
     const code = await Live.host.create(prefer);
     Object.assign(liveSess, {code, status: "on", players: {}});
     store.set("liveCode", code);
-    Live.host.onPlayers(p => { liveSess.players = p; liveRenderPlayers(); liveRenderBtn(); });
+    Live.host.onPlayers(p => { liveSess.players = p; liveRenderPlayers(); liveRenderBtn(); pbRefresh(); });
+    if (current === "bingo") rerender();
   } catch (e) { liveSess.status = "idle"; liveSess.err = liveErrText(e); store.set("liveCode", null); }
   if (!$("#liveDlg").hidden) liveRenderDlg(); else liveRenderBtn();
 }
 async function liveEnd() {
   try { await Live.host.end(); } catch (e) {}
   Object.assign(liveSess, {code: null, players: {}, status: "idle", endArmed: false});
+  Object.assign(pb, {on: false, subscribed: false, points: {}, cards: {}, marks: {}});
+  if (bingo.view === "phones") bingo.view = "tally";
+  if (current === "bingo") rerender();
   store.set("liveCode", null); liveRenderDlg();
 }
 $("#liveBtn").addEventListener("click", liveOpen);
@@ -2442,6 +2475,124 @@ $("#liveDlg").addEventListener("click", e => {
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#liveDlg").hidden) liveClose(); });
 // After a refresh, take the same room back (same browser = same host), so phones stay connected.
 window.addEventListener("load", () => { const c = store.get("liveCode", null); if (c && window.Live && Live.configured) liveBegin(c); });
+
+/* ================= Phone Bingo =================
+   Students make a 3×3 card on their phone and tap numbers off as they're called.
+   Prizes run in order: a line (1 point), then four corners (2), then a full house (3).
+   The projector is the referee: it re-checks every mark against its own list of calls, and the database
+   rules only accept a mark for the number just called, before the next roll. */
+const PB_PRIZES = [["line", "A line", 1], ["corners", "Four corners", 2], ["full", "Full house", 3]];
+const PB_LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+const pb = {on: false, cards: {}, marks: {}, prize: "line", winners: {}, points: {}, gameId: 0, subscribed: false, stopArmed: false};
+const pbPlayers = () => liveSess.players || {};
+const pbPts = id => pb.points[id] != null ? pb.points[id] : ((pbPlayers()[id] && pbPlayers()[id].score) || 0);   // survives a projector refresh
+const pbName = id => (pbPlayers()[id] && pbPlayers()[id].name) || "?";
+const pbCard = id => { const c = pb.cards[id]; if (!c) return null; const a = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => c[i]); return a.every(v => typeof v === "number") ? a : null; };
+function pbButton() {
+  if (!liveSess.code) return `<button type="button" class="btn ghost" id="pbBtn" title="Start a live session first">📱 Play on phones</button>`;
+  return pb.on ? `<button type="button" class="btn live-on" id="pbBtn">📱 Phones on</button>` : `<button type="button" class="btn primary" id="pbBtn">📱 Play on phones</button>`;
+}
+function pbSubscribe() {
+  if (pb.subscribed || !window.Live || !liveSess.code) return;
+  pb.subscribed = true;
+  Live.host.onCards(c => { pb.cards = c || {}; pbRefresh(); });
+  Live.host.onMarks(m => { pb.marks = m || {}; pbEvaluate(); pbRefresh(); });
+}
+function pbStart() { pb.on = true; pb.stopArmed = false; bingoStop(); bingoReset(); bingo.view = "phones"; pbSubscribe(); pbNewGame(); }
+function pbStop() { pb.on = false; pb.stopArmed = false; if (bingo.view === "phones") bingo.view = "tally"; if (window.Live && liveSess.code) { Live.host.clearGame(); Live.host.setState({phase: "lobby", game: null, locked: false}); } }
+function pbNewGame() {
+  pb.prize = "line"; pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
+  if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
+}
+function pbWriteState() {
+  if (!pb.on || !window.Live || !liveSess.code) return;
+  const D = bingoDist(), n = bingo.rolls.length;
+  const winners = {}; PB_PRIZES.forEach(([k]) => { if (pb.winners[k]) winners[k] = pb.winners[k].map(id => ({id, name: pbName(id)})); });
+  Live.host.setState({
+    game: "bingo", gameId: pb.gameId, phase: !n ? "lobby" : pb.prize === "done" ? "over" : "playing", locked: n > 0,
+    cfg: {title: bingoTitle(), lo: D.rows[0][0], hi: D.rows[D.rows.length - 1][0]},
+    ncalls: n, callKey: n ? "c" + n : "", last: n ? bingo.rolls[n - 1] : -1, calls: bingo.rolls.slice(),
+    prize: pb.prize, winners,
+  });
+}
+function pbAfterRoll() { if (pb.on) { pbWriteState(); pbEvaluate(); } }
+/* Which cells really count: the call must match the number in that cell, and one call marks one cell only. */
+function pbValidMarks(id) {
+  const card = pbCard(id); if (!card) return null;
+  const m = pb.marks[id] || {}, used = new Set(), ok = Array(9).fill(false);
+  for (let i = 0; i < 9; i++) {
+    const key = m[i]; if (typeof key !== "string" || !/^c\d+$/.test(key) || used.has(key)) continue;
+    if (bingo.rolls[+key.slice(1) - 1] === card[i]) { ok[i] = true; used.add(key); }
+  }
+  return ok;
+}
+const pbHas = (prize, m) => prize === "line" ? PB_LINES.some(L => L.every(i => m[i])) : prize === "corners" ? [0, 2, 6, 8].every(i => m[i]) : m.every(Boolean);
+function pbEvaluate() {
+  if (!pb.on || !bingo.rolls.length) return;
+  let changed = false;
+  for (const [key, label, pts] of PB_PRIZES) {
+    if (pb.prize !== key) continue;
+    const won = Object.keys(pb.cards).filter(id => pbPlayers()[id] && (() => { const m = pbValidMarks(id); return m && pbHas(key, m); })());
+    if (!won.length) break;
+    pb.winners[key] = won; changed = true;
+    won.forEach(id => { pb.points[id] = pbPts(id) + pts; Live.host.setScore(id, pb.points[id]); });
+    announce(`${label}! ${won.map(pbName).join(", ")} ${won.length > 1 ? "score" : "scores"} ${pts}`, key === "full");
+    pb.prize = key === "line" ? "corners" : key === "corners" ? "full" : "done";
+  }
+  if (changed) { pbWriteState(); pbRefresh(); }
+}
+/* Players who have the number just called on their card but haven't marked it yet. */
+function pbWaiting() {
+  const n = bingo.rolls.length; if (!n || pb.prize === "done") return [];
+  const last = bingo.rolls[n - 1], key = "c" + n;
+  return Object.keys(pb.cards).filter(id => {
+    const card = pbCard(id); if (!card || !pbPlayers()[id]) return false;
+    const m = pb.marks[id] || {}, ok = pbValidMarks(id);
+    if (Object.values(m).includes(key)) return false;
+    return card.some((v, i) => v === last && !ok[i]);
+  });
+}
+function pbHint() {
+  const n = bingo.rolls.length, ready = Object.keys(pb.cards).filter(id => pbPlayers()[id]).length, joined = Object.keys(pbPlayers()).length;
+  if (!n) return `<b>${ready} of ${joined}</b> cards ready. Cards lock when you roll.`;
+  if (pb.prize === "done") return "Game over. Press <b>New game</b> to play again: students keep their points.";
+  const w = pbWaiting();
+  return w.length ? `Still to mark: <b>${w.map(id => esc(pbName(id))).join(", ")}</b>` : "Everyone's marked. Roll when you're ready.";
+}
+function pbView() {
+  const n = bingo.rolls.length, ids = Object.keys(pbPlayers());
+  const rows = ids.map(id => { const card = pbCard(id), m = card ? pbValidMarks(id) : null; return {id, card, m, marked: m ? m.filter(Boolean).length : -1, pts: pbPts(id)}; })
+    .sort((a, b) => b.pts - a.pts || b.marked - a.marked || pbName(a.id).localeCompare(pbName(b.id)));
+  const waiting = new Set(pbWaiting());
+  const prizeChips = PB_PRIZES.map(([k, label, pts]) => {
+    const w = pb.winners[k], cur = pb.prize === k;
+    return `<span class="pb-prize ${w ? "won" : cur ? "cur" : ""}"><b>${label}</b> · ${pts} ${pts === 1 ? "pt" : "pts"}${w ? ` · ${w.map(id => esc(pbName(id))).join(", ")}` : cur ? " · playing now" : ""}</span>`;
+  }).join("");
+  const missed = (card, m) => { if (!card) return []; const cnt = {}; bingo.rolls.slice(0, -1).forEach(v => cnt[v] = (cnt[v] || 0) + 1); const out = Array(9).fill(false);
+    for (let i = 0; i < 9; i++) if (!m[i] && cnt[card[i]]) { const marked = card.filter((v, j) => v === card[i] && m[j]).length; const before = card.slice(0, i).filter((v, j) => v === card[i] && !m[j]).length; if (cnt[card[i]] - marked > before) out[i] = true; }
+    return out; };
+  return `
+    <div class="panel-head"><h2>${ids.length} on phones</h2>
+      <div class="controls"><button type="button" class="btn ghost" id="pbStop">${pb.stopArmed ? "Click again to stop" : "Stop the phone game"}</button></div></div>
+    <div class="pb-prizes">${prizeChips}</div>
+    <p class="pb-wait ${n && waiting.size ? "" : "ok"}">${pbHint()}</p>
+    <div class="pb-grid">${rows.map(({id, card, m, pts}) => {
+      const miss = card ? missed(card, m) : [];
+      return `<div class="pb-p ${waiting.has(id) ? "waiting" : ""}">
+        <div class="pb-top"><b>${esc(pbName(id))}</b><span class="pb-pts">${pts}</span></div>
+        ${card ? `<div class="mcard">${card.map((v, i) => `<span class="${m[i] ? "hit" : miss[i] ? "miss" : ""}">${v}</span>`).join("")}</div>` : `<div class="mcard empty">${n ? "Next game" : "Making a card…"}</div>`}
+      </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Open 📱 Live at the top to show the code.</p>`}</div>`;
+}
+function pbRefresh() {
+  if (current !== "bingo") return;
+  const v = $("#bView"); if (v && bingo.view === "phones") v.innerHTML = pbView();
+  const h = $("#pbHint"); if (h) h.innerHTML = pbHint();
+}
+function announce(text, big) {
+  const el = document.createElement("div"); el.className = "announce" + (big ? " big" : ""); el.setAttribute("role", "status"); el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.add("out"), big ? 4500 : 3000); setTimeout(() => el.remove(), big ? 5100 : 3600);
+}
 
 /* ================= router ================= */
 let current = "";

@@ -19,14 +19,25 @@
             "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
             "joined": { ".validate": "newData.isNumber()" },
             "online": { ".validate": "newData.isBoolean()" },
-            "score": { ".validate": "newData.isNumber()" },
+            "score": { ".validate": "newData.isNumber() && (newData.val() === data.val() || root.child('rooms/' + $code + '/meta/host').val() === auth.uid)" },
+            "avatar": { ".validate": "newData.isString() && newData.val().length <= 24" },
             "$other": { ".validate": false }
           }
         },
         "cards": {
           ".write": "auth != null && root.child('rooms/' + $code + '/meta/host').val() === auth.uid",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $code + '/players/' + $uid).exists() && root.child('rooms/' + $code + '/state/locked').val() !== true"
+            ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $code + '/players/' + $uid).exists() && root.child('rooms/' + $code + '/state/locked').val() !== true",
+            ".validate": "newData.hasChildren(['0', '1', '2', '3', '4', '5', '6', '7', '8'])"
+          }
+        },
+        "marks": {
+          ".write": "auth != null && root.child('rooms/' + $code + '/meta/host').val() === auth.uid",
+          "$uid": {
+            "$cell": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms/' + $code + '/state/locked').val() === true",
+              ".validate": "$cell.matches(/^[0-8]$/) && newData.isString() && newData.val() === root.child('rooms/' + $code + '/state/callKey').val() && root.child('rooms/' + $code + '/cards/' + $uid + '/' + $cell).val() === root.child('rooms/' + $code + '/state/last').val()"
+            }
           }
         },
         "$other": { ".validate": false }

@@ -50,6 +50,37 @@ button{font:inherit;cursor:pointer}
 .wait i:nth-child(2){animation-delay:.15s}.wait i:nth-child(3){animation-delay:.3s}
 @keyframes b{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.wait i{animation:none}}
+/* ---------- bingo on the phone ---------- */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pts{font-family:var(--display);font-weight:900;font-size:22px;padding:4px 12px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margin:0}
+.prize{display:flex;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:12px;border:2px solid var(--accent);font-weight:700}
+.card.call{flex-direction:row;padding:12px 18px;align-items:center;justify-content:space-between;gap:12px}
+.call{padding:12px 18px}.call .num{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9}
+.results{display:grid;gap:4px;padding:12px 14px;border-radius:12px;background:var(--hi);color:#131A2C}.results p{margin:0}
+.pcard{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cell{aspect-ratio:1;border:3px solid var(--ink);border-radius:16px;background:var(--surface);color:var(--ink);font-family:var(--display);font-weight:900;font-size:clamp(34px,11vw,52px);display:grid;place-items:center;position:relative;padding:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.cell.empty{border-style:dashed;color:var(--muted)}
+.cell.sel{outline:4px solid var(--accent);outline-offset:2px}
+.cell.hit{background:var(--good);border-color:var(--good);color:#fff}
+.cell.hit::after{content:"";position:absolute;inset:18%;border-radius:50%;border:4px solid rgba(255,255,255,.75)}
+.cell.pending{background:color-mix(in srgb,var(--good) 45%,var(--surface))}
+.cell.miss{border-style:dashed;border-color:var(--bad);color:var(--bad)}
+.cell.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.keys button{font-family:var(--display);font-weight:900;font-size:24px;padding:10px 0;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.keys button:active{background:var(--accent);color:var(--accent-ink)}
+.row{display:flex;gap:10px;align-items:center}
+.row .go{flex:1}
+.flash{margin:0;min-height:1.5em;font-weight:700;text-align:center}
+.flash.bad{color:var(--bad)} .flash.good{color:var(--good)}
+.legend{display:flex;gap:14px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:4px}
+.win{position:fixed;inset:0;display:grid;place-items:center;background:rgba(14,19,32,.82);z-index:10;padding:20px;text-align:center}
+.win div{background:var(--hi);color:#131A2C;border:4px solid #131A2C;border-radius:24px;padding:28px 22px;font-family:var(--display);font-weight:900;font-size:56px;line-height:1;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.win small{display:block;font-family:var(--body);font-size:20px;margin-top:10px}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
 </style>
 </head>
 <body>
@@ -68,7 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const store = {get(k) { try { return localStorage.getItem("mgr-join:" + k) || ""; } catch (e) { return ""; } },
                  set(k, v) { try { localStorage.setItem("mgr-join:" + k, v); } catch (e) {} }};
   const params = new URLSearchParams(location.search);
-  const S = {view: "form", code: (params.get("code") || store.get("code") || "").toUpperCase().slice(0, 4), name: store.get("name"), err: "", busy: false, state: null, me: null};
+  const S = {view: "form", code: (params.get("code") || store.get("code") || "").toUpperCase().slice(0, 4), name: store.get("name"), err: "", busy: false, state: null, me: null,
+             card: null, marks: {}, draft: Array(9).fill(null), sel: 0, editing: false, pending: {}, flash: null, celebrated: {}, gameId: null, typed: "", shake: -1};
+  const PRIZES = {line: ["a line", 1], corners: ["four corners", 2], full: ["a full house", 3]};
   const brand = `<div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 1v18M13 1v18M1 7h18M1 13h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>The Grid</div>`;
   const ERR = {
     "not-configured": "Live play isn't set up yet. Ask your teacher.",
@@ -92,6 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </form>`;
       $("#f").onsubmit = e => { e.preventDefault(); join($("#code").value, $("#name").value); };
       if (!S.code) $("#code").focus(); else if (!S.name) $("#name").focus();
+    } else if (S.view === "in" && S.state && S.state.game === "bingo") {
+      renderBingo(app);
     } else if (S.view === "in") {
       const st = S.state || {}, online = S.me && S.me.online !== false;
       app.innerHTML = `${brand}
@@ -104,6 +139,90 @@ document.addEventListener("DOMContentLoaded", () => {
       app.innerHTML = `${brand}<div class="card"><p class="msg">${esc(S.err)}</p><button class="go" id="again" type="button">Join a game</button></div>`;
       $("#again").onclick = () => { S.view = "form"; S.err = ""; render(); };
     }
+  }
+
+  /* ---------- bingo ---------- */
+  const markOf = i => S.marks[i] || S.pending[i] || null;
+  function missedCells() {                    // numbers called before this one that you didn't mark in time
+    const st = S.state, out = Array(9).fill(false); if (!S.card || !st.calls) return out;
+    const cnt = {}; st.calls.slice(0, -1).forEach(v => cnt[v] = (cnt[v] || 0) + 1);
+    S.card.forEach((v, i) => {
+      if (markOf(i) || !cnt[v]) return;
+      const marked = S.card.filter((w, j) => w === v && markOf(j)).length, before = S.card.slice(0, i).filter((w, j) => w === v && !markOf(j)).length;
+      if (cnt[v] - marked > before) out[i] = true;
+    });
+    return out;
+  }
+  function celebrate() {
+    const st = S.state; if (!st || !st.winners) return;
+    for (const k of Object.keys(PRIZES)) {
+      const w = st.winners[k]; if (!w || S.celebrated[k]) continue;
+      S.celebrated[k] = true;
+      if ((Array.isArray(w) ? w : Object.values(w)).some(x => x && x.id === Live.uid)) {
+        const el = document.createElement("div"); el.className = "win";
+        el.innerHTML = `<div>${k === "full" ? "BINGO!" : k === "corners" ? "Four corners!" : "A line!"}<small>+${PRIZES[k][1]} ${PRIZES[k][1] === 1 ? "point" : "points"}</small></div>`;
+        document.body.appendChild(el); setTimeout(() => el.remove(), 3500); el.onclick = () => el.remove();
+        try { navigator.vibrate && navigator.vibrate([120, 60, 120, 60, 240]); } catch (e) {}
+      }
+    }
+  }
+  function flash(text, tone, cell) { S.flash = {text, tone}; S.shake = cell == null ? -1 : cell; render(); S.shake = -1; }
+  function tapMark(i) {
+    const st = S.state;
+    if (st.phase !== "playing" || !S.card || markOf(i)) return;
+    if (S.card[i] !== st.last) return flash(`${S.card[i]} hasn't just been called. The last number was ${st.last}.`, "bad", i);
+    if (Object.values(S.marks).includes(st.callKey) || Object.values(S.pending).includes(st.callKey)) return flash("You've already marked this number once.", "bad", i);
+    S.pending[i] = st.callKey; S.flash = null; render();
+    Live.player.mark(i, st.callKey).catch(() => { delete S.pending[i]; flash("Too late: the next number had already been rolled.", "bad", i); });
+  }
+  function renderBingo(app) {
+    const st = S.state, cfg = st.cfg || {lo: 1, hi: 6, title: ""}, me = S.me || {}, pts = me.score || 0;
+    const top = `<div class="top">${brand}<span class="pts">${pts} ${pts === 1 ? "pt" : "pts"}</span></div>`;
+    const prizeLine = st.phase === "over" ? `<div class="prize"><span>Game over</span><span>Wait for the next game</span></div>`
+      : PRIZES[st.prize] ? `<div class="prize"><span>Playing for ${PRIZES[st.prize][0]}</span><span>${PRIZES[st.prize][1]} ${PRIZES[st.prize][1] === 1 ? "pt" : "pts"}</span></div>` : "";
+    const winners = Object.keys(PRIZES).filter(k => st.winners && st.winners[k]).map(k => { const w = st.winners[k]; return `<p class="muted" style="margin:0">${PRIZES[k][0][0].toUpperCase() + PRIZES[k][0].slice(1)}: <b>${(Array.isArray(w) ? w : Object.values(w)).map(x => esc(x.name)).join(", ")}</b></p>`; }).join("");
+    const flashHTML = `<p class="flash ${S.flash ? S.flash.tone : ""}" aria-live="polite">${S.flash ? esc(S.flash.text) : ""}</p>`;
+    let body;
+    if (st.phase === "lobby" && (!S.card || S.editing)) {
+      const big = cfg.hi - cfg.lo > 41, full = S.draft.every(v => v != null);
+      body = `<h2>Make your card</h2><p class="muted" style="margin:0">${esc(cfg.title)}. Pick 9 numbers from ${cfg.lo} to ${cfg.hi}. Repeats are allowed.</p>
+        <div class="pcard">${S.draft.map((v, i) => `<button type="button" class="cell ${v == null ? "empty" : ""} ${i === S.sel ? "sel" : ""}" data-cell="${i}" aria-label="Square ${i + 1}${v == null ? ", empty" : ", " + v}">${v == null ? "" : v}</button>`).join("")}</div>
+        ${big ? `<div class="row"><input id="numIn" inputmode="numeric" placeholder="${cfg.lo}–${cfg.hi}" value="${esc(S.typed)}" style="flex:1"><button type="button" class="go" id="numGo" style="flex:0 0 auto;width:auto;padding:12px 20px;font-size:24px">Add</button></div>`
+          : `<div class="keys">${Array.from({length: cfg.hi - cfg.lo + 1}, (_, k) => cfg.lo + k).map(v => `<button type="button" data-key="${v}">${v}</button>`).join("")}</div>`}
+        ${flashHTML}
+        <div class="row"><button type="button" class="link" id="clr">Clear</button><button type="button" class="go" id="lockIn" ${full ? "" : "disabled"}>Lock in my card</button></div>`;
+    } else if (st.phase === "lobby") {
+      body = `<h2>Card ready ✓</h2><p class="muted" style="margin:0">Waiting for the first roll. Your card locks when it starts.</p>
+        <div class="pcard">${S.card.map(v => `<div class="cell">${v}</div>`).join("")}</div>
+        <button type="button" class="link" id="edit">Change my card</button>`;
+    } else if (!S.card) {
+      body = `${prizeLine}<div class="card call"><span>Last call</span><span class="num">${st.last}</span></div>
+        <p class="msg">This game started before you made a card. You'll play the next one.</p>${winners}`;
+    } else {
+      const miss = missedCells(), over = st.phase === "over";
+      body = `${over ? `<div class="results"><p><b>Game over</b></p>${winners.replace(/class="muted" /g, "")}</div>` : prizeLine}
+        <div class="card call"><span><b>${over ? "Final call" : "Call " + st.ncalls}</b><br><span class="muted">${over ? `${st.ncalls} numbers rolled` : "Tap it if it's on your card"}</span></span><span class="num">${st.last}</span></div>
+        <div class="pcard">${S.card.map((v, i) => { const m = markOf(i); return `<button type="button" class="cell ${S.marks[i] ? "hit" : m ? "hit pending" : miss[i] ? "miss" : ""} ${S.shake === i ? "shake" : ""}" data-mark="${i}" aria-label="${v}${m ? ", marked" : miss[i] ? ", missed" : ""}">${v}</button>`; }).join("")}</div>
+        ${flashHTML}
+        <div class="legend"><span><i style="background:var(--good)"></i>Marked</span><span><i style="border:2px dashed var(--bad)"></i>Missed</span></div>${over ? "" : winners}`;
+    }
+    app.innerHTML = `${top}${body}`;
+    app.querySelectorAll("[data-cell]").forEach(b => b.onclick = () => { S.sel = +b.dataset.cell; render(); });
+    const put = v => { S.draft[S.sel] = v; const nxt = S.draft.indexOf(null); if (nxt >= 0) S.sel = nxt; S.flash = null; render(); };
+    app.querySelectorAll("[data-key]").forEach(b => b.onclick = () => put(+b.dataset.key));
+    const ni = $("#numIn");
+    if (ni) {
+      const add = () => { const v = parseInt(ni.value, 10); if (!(v >= cfg.lo && v <= cfg.hi)) return flash(`Pick a number from ${cfg.lo} to ${cfg.hi}.`, "bad"); S.typed = ""; put(v); setTimeout(() => { const n2 = $("#numIn"); if (n2) n2.focus(); }, 0); };
+      ni.oninput = () => { S.typed = ni.value; }; ni.onkeydown = e => { if (e.key === "Enter") add(); }; $("#numGo").onclick = add;
+    }
+    const clr = $("#clr"); if (clr) clr.onclick = () => { S.draft = Array(9).fill(null); S.sel = 0; render(); };
+    const lock = $("#lockIn"); if (lock) lock.onclick = () => {
+      lock.disabled = true;
+      Live.player.setCard(S.draft.slice()).then(() => { S.editing = false; S.flash = null; render(); })
+        .catch(() => flash("Too late: the game has started. You'll play the next one.", "bad"));
+    };
+    const ed = $("#edit"); if (ed) ed.onclick = () => { S.editing = true; S.draft = S.card.slice(); S.sel = 0; render(); };
+    app.querySelectorAll("[data-mark]").forEach(b => b.onclick = () => tapMark(+b.dataset.mark));
   }
 
   async function join(code, name, auto) {
@@ -120,8 +239,19 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       Live.player.onState(st => {
         if (st === null) { Live.player.leave(); S.view = "gone"; S.err = "The game has ended. Thanks for playing!"; render(); return; }
-        S.state = st; if (S.view === "in") render();
+        if (st.gameId !== S.gameId) {                     // a new game: start from your last card, ready to change it
+          S.gameId = st.gameId; S.celebrated = {}; S.pending = {}; S.editing = false;
+          const lo = st.cfg ? st.cfg.lo : 0, hi = st.cfg ? st.cfg.hi : 0, prev = S.card || S.draft;
+          S.draft = prev.map(v => v != null && v >= lo && v <= hi ? v : null); S.sel = Math.max(0, S.draft.indexOf(null));
+        }
+        const asList = v => Array.isArray(v) ? v : v ? Object.keys(v).sort((x, y) => x - y).map(k => v[k]) : [];
+        st.calls = asList(st.calls);
+        if (st.winners) for (const k in st.winners) st.winners[k] = asList(st.winners[k]);
+        if (S.state && st.callKey !== S.state.callKey) S.flash = null;
+        S.state = st; celebrate(); if (S.view === "in") render();
       });
+      Live.player.onCard(c => { S.card = c ? [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => c[i]) : null; if (S.view === "in") render(); });
+      Live.player.onMarks(m => { S.marks = m || {}; Object.keys(S.pending).forEach(i => { if (S.marks[i]) delete S.pending[i]; }); if (S.view === "in") render(); });
     } catch (e) { S.busy = false; S.err = auto && e.message === "no-room" ? "" : errText(e); S.view = "form"; render(); }
   }
 
