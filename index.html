@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22d" defer></script>
-<script src="js/live.js?v=2026-11-22d" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22e" defer></script>
+<script src="js/live.js?v=2026-11-22e" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 /* Layout idea: an exercise-book grid as the stage, scoreboard docked along the bottom like a sports ticker; built to be read from the back of a classroom. */
@@ -479,7 +479,7 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
 .mcard span.hit{background:var(--good);border-color:var(--good);color:#fff}
 .mcard span.miss{border:2px dashed var(--bad);color:var(--bad)}
 .mcard.empty{display:grid;place-items:center;aspect-ratio:1;border:1.5px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13px;line-height:1.3;text-align:center;padding:4px}
-.announce{position:fixed;left:50%;top:18%;transform:translate(-50%,0);z-index:70;background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:clamp(34px,4vw,60px);padding:18px 34px;border-radius:20px;border:4px solid var(--hi);box-shadow:8px 8px 0 rgba(0,0,0,.35);text-align:center;max-width:90vw;animation:annIn .45s cubic-bezier(.2,1.5,.4,1)}
+.announce{white-space:pre-line;position:fixed;left:50%;top:18%;transform:translate(-50%,0);z-index:70;background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:clamp(34px,4vw,60px);padding:18px 34px;border-radius:20px;border:4px solid var(--hi);box-shadow:8px 8px 0 rgba(0,0,0,.35);text-align:center;max-width:90vw;animation:annIn .45s cubic-bezier(.2,1.5,.4,1)}
 .announce.big{font-size:clamp(48px,6vw,96px);background:var(--hi);color:var(--hi-ink);border-color:var(--ink)}
 .announce.out{opacity:0;transition:opacity .5s ease}
 @keyframes annIn{from{transform:translate(-50%,0) scale(.6);opacity:0}to{transform:translate(-50%,0) scale(1);opacity:1}}
@@ -2654,7 +2654,8 @@ window.addEventListener("load", () => { const c = store.get("liveCode", null); i
 
 /* ================= Phone Bingo =================
    Students make a 3×3 card on their phone and tap numbers off as they're called.
-   Prizes run in order: a line (1 point), then four corners (2), then a full house (3).
+   Three prizes are open from the first roll: a line (1 point), four corners (2) and a full house (3).
+   The first to complete each one wins it; the game ends at the full house.
    The projector is the referee: it re-checks every mark against its own list of calls, and the database
    rules only accept a mark for the number just called, before the next roll. */
 const PB_PRIZES = [["line", "A line", 1], ["corners", "Four corners", 2], ["full", "Full house", 3]];
@@ -2677,19 +2678,19 @@ function pbSubscribe() {
 function pbStart() { pb.on = true; pb.stopArmed = false; bingoStop(); bingoReset(); bingo.view = "phones"; pbSubscribe(); pbNewGame(); }
 function pbStop() { pb.on = false; pb.stopArmed = false; if (bingo.view === "phones") bingo.view = "tally"; if (window.Live && liveSess.code) { Live.host.clearGame(); hostSetState({phase: "lobby", game: null, locked: false}); } }
 function pbNewGame() {
-  pb.prize = "line"; pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
+  pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
   if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
 }
-const GRID_VERSION = "2026-11-22d";   // phones on an older copy of join.html reload when this changes
+const GRID_VERSION = "2026-11-22e";   // phones on an older copy of join.html reload when this changes
 function pbWriteState() {
   if (!pb.on || !window.Live || !liveSess.code) return;
   const D = bingoDist(), n = bingo.rolls.length;
   const winners = {}; PB_PRIZES.forEach(([k]) => { if (pb.winners[k]) winners[k] = pb.winners[k].map(id => ({id, name: pbName(id)})); });
   hostSetState({
-    game: "bingo", gameId: pb.gameId, phase: !n ? "lobby" : pb.prize === "done" ? "over" : "playing", locked: n > 0,
+    game: "bingo", gameId: pb.gameId, phase: !n ? "lobby" : pbOver() ? "over" : "playing", locked: n > 0,
     cfg: {title: bingoTitle(), lo: D.rows[0][0], hi: D.rows[D.rows.length - 1][0]},
     ncalls: n, callKey: n ? "c" + n : "", last: n ? bingo.rolls[n - 1] : -1, calls: bingo.rolls.slice(),
-    prize: pb.prize, winners,
+    open: pbOpen(), prize: pbOpen()[0] || "done", winners,
   });
 }
 function pbAfterRoll() { if (pb.on) { pbWriteState(); pbEvaluate(); } }
@@ -2703,24 +2704,26 @@ function pbValidMarks(id) {
   }
   return ok;
 }
+const PB_SHORT = {line: "line", corners: "corners", full: "full house"};
+const pbOver = () => !!pb.winners.full;
+const pbOpen = () => pbOver() ? [] : PB_PRIZES.map(p => p[0]).filter(k => !pb.winners[k]);
 const pbHas = (prize, m) => prize === "line" ? PB_LINES.some(L => L.every(i => m[i])) : prize === "corners" ? [0, 2, 6, 8].every(i => m[i]) : m.every(Boolean);
 function pbEvaluate() {
   if (!pb.on || !bingo.rolls.length) return;
-  let changed = false;
-  for (const [key, label, pts] of PB_PRIZES) {
-    if (pb.prize !== key) continue;
+  const open = pbOpen(), news = [];
+  for (const [key, label, pts] of PB_PRIZES) {          // every open prize can be won on any roll
+    if (!open.includes(key)) continue;
     const won = Object.keys(pb.cards).filter(id => pbPlayers()[id] && (() => { const m = pbValidMarks(id); return m && pbHas(key, m); })());
-    if (!won.length) break;
-    pb.winners[key] = won; changed = true;
+    if (!won.length) continue;
+    pb.winners[key] = won;
     won.forEach(id => awardPlayer(id, pts));
-    announce(`${label}! ${won.map(pbName).join(", ")} ${won.length > 1 ? "score" : "scores"} ${pts}`, key === "full");
-    pb.prize = key === "line" ? "corners" : key === "corners" ? "full" : "done";
+    news.push(`${label}! ${won.map(pbName).join(", ")} ${won.length > 1 ? "score" : "scores"} ${pts}`);
   }
-  if (changed) { pbWriteState(); pbRefresh(); }
+  if (news.length) { announce(news.join("\n"), !!pb.winners.full && open.includes("full")); pbWriteState(); pbRefresh(); }
 }
 /* Players who have the number just called on their card but haven't marked it yet. */
 function pbWaiting() {
-  const n = bingo.rolls.length; if (!n || pb.prize === "done") return [];
+  const n = bingo.rolls.length; if (!n || pbOver()) return [];
   const last = bingo.rolls[n - 1], key = "c" + n;
   return Object.keys(pb.cards).filter(id => {
     const card = pbCard(id); if (!card || !pbPlayers()[id]) return false;
@@ -2732,11 +2735,16 @@ function pbWaiting() {
 function pbHint() {
   const n = bingo.rolls.length, ready = Object.keys(pb.cards).filter(id => pbPlayers()[id]).length, joined = Object.keys(pbPlayers()).length;
   if (!n) return `<b>${ready} of ${joined}</b> cards ready. Cards lock when you roll.`;
-  if (pb.prize === "done") return "Game over. Press <b>New game</b> to play again: students keep their points.";
+  if (pbOver()) return "Game over. Press <b>New game</b> to play again: students keep their points.";
   const w = pbWaiting();
   return w.length ? `Still to mark: <b>${w.map(id => esc(pbName(id))).join(", ")}</b>` : "Everyone's marked. Roll when you're ready.";
 }
 /* How many more numbers a card needs for the prize being played for (Infinity if it has no card). */
+function pbNearest(m) {                 // the open prize this card is closest to
+  let best = {togo: Infinity, key: null};
+  pbOpen().forEach(k => { const t = pbToGo(m, k); if (t < best.togo) best = {togo: t, key: k}; });
+  return best;
+}
 function pbToGo(m, prize) {
   if (!m) return Infinity;
   if (prize === "line") return Math.min(...PB_LINES.map(L => L.filter(i => !m[i]).length));
@@ -2745,15 +2753,15 @@ function pbToGo(m, prize) {
   return Infinity;
 }
 function pbView() {
-  const n = bingo.rolls.length, ids = Object.keys(pbPlayers()), playing = n > 0 && pb.prize !== "done";
+  const n = bingo.rolls.length, ids = Object.keys(pbPlayers()), playing = n > 0 && !pbOver();
   // closest to winning first, so the race is always at the top of the board
-  const rows = ids.map(id => { const card = pbCard(id), m = card ? pbValidMarks(id) : null; return {id, card, m, togo: pbToGo(m, pb.prize), marked: m ? m.filter(Boolean).length : -1, pts: pbPts(id)}; })
+  const rows = ids.map(id => { const card = pbCard(id), m = card ? pbValidMarks(id) : null; const near = pbNearest(m); return {id, card, m, togo: near.togo, near: near.key, marked: m ? m.filter(Boolean).length : -1, pts: pbPts(id)}; })
     .sort((a, b) => (a.togo - b.togo || 0) || b.marked - a.marked || b.pts - a.pts || pbName(a.id).localeCompare(pbName(b.id)));
   const mc = ids.length <= 8 ? 128 : ids.length <= 14 ? 112 : ids.length <= 24 ? 96 : 84;
   const waiting = new Set(pbWaiting());
   const prizeChips = PB_PRIZES.map(([k, label, pts]) => {
-    const w = pb.winners[k], cur = pb.prize === k;
-    return `<span class="pb-prize ${w ? "won" : cur ? "cur" : ""}"><b>${label}</b> · ${pts} ${pts === 1 ? "pt" : "pts"}${w ? ` · ${w.map(id => esc(pbName(id))).join(", ")}` : cur ? " · playing now" : ""}</span>`;
+    const w = pb.winners[k], cur = pbOpen().includes(k);
+    return `<span class="pb-prize ${w ? "won" : cur ? "cur" : ""}"><b>${label}</b> · ${pts} ${pts === 1 ? "pt" : "pts"}${w ? ` · ${w.map(id => esc(pbName(id))).join(", ")}` : cur ? " · open" : ""}</span>`;
   }).join("");
   const missed = (card, m) => { if (!card) return []; const cnt = {}; bingo.rolls.slice(0, -1).forEach(v => cnt[v] = (cnt[v] || 0) + 1); const out = Array(9).fill(false);
     for (let i = 0; i < 9; i++) if (!m[i] && cnt[card[i]]) { const marked = card.filter((v, j) => v === card[i] && m[j]).length; const before = card.slice(0, i).filter((v, j) => v === card[i] && !m[j]).length; if (cnt[card[i]] - marked > before) out[i] = true; }
@@ -2763,12 +2771,12 @@ function pbView() {
       <div class="controls"><button type="button" class="btn ghost" id="pbStop">${pb.stopArmed ? "Click again to stop" : "Stop the phone game"}</button></div></div>
     <div class="pb-prizes">${prizeChips}</div>
     <p class="pb-wait ${n && waiting.size ? "" : "ok"}">${pbHint()}</p>
-    <div class="pb-grid" style="--mc:${mc}px">${rows.map(({id, card, m, pts, togo}) => {
+    <div class="pb-grid" style="--mc:${mc}px">${rows.map(({id, card, m, pts, togo, near}) => {
       const miss = card ? missed(card, m) : [], close = playing && togo === 1;
       return `<div class="pb-p ${close ? "close" : waiting.has(id) ? "waiting" : ""}">
         <div class="pb-top"><b>${esc(pbName(id))}</b><span class="pb-pts">${pts}</span></div>
         ${card ? `<div class="mcard">${card.map((v, i) => `<span class="${m[i] ? "hit" : miss[i] ? "miss" : ""}">${v}</span>`).join("")}</div>` : `<div class="mcard empty">${n ? "Next game" : "No card<br>yet"}</div>`}
-        ${card && playing ? `<div class="pb-togo">${close ? "1 to go!" : togo + " to go"}</div>` : ""}
+        ${card && playing ? `<div class="pb-togo">${close ? "1 to go: " + PB_SHORT[near] : togo + " to go"}</div>` : ""}
       </div>`; }).join("") || `<p class="muted">Nobody's joined yet. Press 📱 Online at the top to show the code.</p>`}</div>`;
 }
 function pbRefresh() {

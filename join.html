@@ -106,8 +106,8 @@ h2{font-family:var(--display);font-weight:900;font-size:36px;line-height:1;margi
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22d" defer></script>
-<script src="js/live.js?v=2026-11-22d" defer></script>
+<script src="js/firebase-config.js?v=2026-11-22e" defer></script>
+<script src="js/live.js?v=2026-11-22e" defer></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   "use strict";
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(location.search);
   const S = {view: "form", code: (params.get("code") || store.get("code") || "").toUpperCase().slice(0, 4), name: store.get("name"), err: "", busy: false, state: null, me: null,
              card: null, marks: {}, draft: Array(9).fill(null), sel: 0, editing: false, pending: {}, flash: null, celebrated: {}, gameId: null, typed: "", shake: -1};
-  const GRID_VERSION = "2026-11-22d";
+  const GRID_VERSION = "2026-11-22e";
   const PRIZES = {line: ["a line", 1], corners: ["four corners", 2], full: ["a full house", 3]};
   const brand = `<div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 1v18M13 1v18M1 7h18M1 13h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></span>The Grid</div>`;
   const ERR = {
@@ -226,9 +226,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <p class="msg">This game started before you made a card. You'll play the next one.</p>${winners}`;
     } else {
       const miss = missedCells(), over = st.phase === "over";
-      const pr = PRIZES[st.prize];
+      const open = (Array.isArray(st.open) ? st.open : st.open ? Object.values(st.open) : st.prize && st.prize !== "done" ? [st.prize] : []).filter(k => PRIZES[k]);
       body = `${over ? `<div class="results"><p><b>Game over</b></p>${winList.map(w => `<p>${w}</p>`).join("")}</div>` : ""}
-        <div class="card call"><span><b>${over ? "Final call" : "Call " + st.ncalls}</b><br><span class="muted">${over ? `${st.ncalls} numbers rolled` : pr ? `Playing for ${pr[0]} · ${pr[1]} ${pr[1] === 1 ? "pt" : "pts"}` : ""}</span></span><span class="num">${st.last}</span></div>
+        <div class="card call"><span><b>${over ? "Final call" : "Call " + st.ncalls}</b><br><span class="muted">${over ? `${st.ncalls} numbers rolled` : open.length ? "Up for grabs: " + open.map(k => ({line: "line", corners: "corners", full: "full house"})[k]).join(" · ") : ""}</span></span><span class="num">${st.last}</span></div>
         ${wrap(S.card.map((v, i) => { const m = markOf(i); return `<button type="button" class="cell ${S.marks[i] ? "hit" : m ? "hit pending" : miss[i] ? "miss" : ""} ${S.shake === i ? "shake" : ""}" data-mark="${i}" aria-label="${v}${m ? ", marked" : miss[i] ? ", missed" : ""}">${v}</button>`; }).join(""))}
         ${flashHTML(over ? "" : miss.some(Boolean) ? "Red dashed squares are numbers you missed." : "Tap the number if it's on your card.")}
         ${over ? "" : winners}`;
