@@ -2396,7 +2396,7 @@ const LIVE_ERR = {
   "timeout": "Firebase didn't answer. Check the internet connection, then try again.",
   "no-code": "Couldn't create a game code. Try again.",
 };
-const liveErrText = e => LIVE_ERR[e && e.message] || ("Couldn't start: " + ((e && (e.code || e.message)) || "unknown error") + ". Check the Firebase setup, then try again.");
+const liveErrText = e => /permission.denied/i.test(String((e && (e.code || e.message)) || "")) ? "Firebase refused this. Its database rules are out of date: paste the latest rules from the GitHub repo (database.rules.json) into Firebase → Realtime Database → Rules, press Publish, then try again." : LIVE_ERR[e && e.message] || ("Couldn't start: " + ((e && (e.code || e.message)) || "unknown error") + ". Check the Firebase setup, then try again.");
 function joinURL(code) {
   const base = location.href.split("#")[0].split("?")[0].replace(/index\.html$/, "");
   return (base.endsWith("/") ? base : base + "/") + "join?code=" + code;
