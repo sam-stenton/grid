@@ -7,14 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;600&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=STIX+Two+Text:ital,wght@1,500&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#070B12">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 120%27%3E%3Crect width=%27120%27 height=%27120%27 rx=%2724%27 fill=%27%23121B2A%27/%3E%3Cpath d=%27M40 8V112M80 8V112M8 40H112M8 80H112%27 stroke=%27%234A5D78%27 stroke-width=%276%27/%3E%3Crect x=%2784%27 y=%2710%27 width=%2726%27 height=%2726%27 rx=%276%27 fill=%27%236FE3EE%27/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0A0E15">
+<script src="js/settings.js?v=2026-11-23a"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 120%27%3E%3Crect width=%27120%27 height=%27120%27 rx=%2724%27 fill=%27%23171D28%27/%3E%3Cpath d=%27M40 8V112M80 8V112M8 40H112M8 80H112%27 stroke=%27%234A566A%27 stroke-width=%276%27/%3E%3Crect x=%2784%27 y=%2710%27 width=%2726%27 height=%2726%27 rx=%276%27 fill=%27%2376CFDB%27/%3E%3C/svg%3E">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
-<script src="js/firebase-config.js?v=2026-11-22g" defer></script>
-<script src="js/live.js?v=2026-11-22g" defer></script>
-<script src="js/sound.js?v=2026-11-22g" defer></script>
+<script src="js/firebase-config.js?v=2026-11-23a" defer></script>
+<script src="js/live.js?v=2026-11-23a" defer></script>
+<script src="js/sound.js?v=2026-11-23a" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 /* Layout idea: an exercise-book grid as the stage, scoreboard docked along the bottom like a sports ticker; built to be read from the back of a classroom. */
@@ -628,17 +629,18 @@ svg.argand .preview{stroke-dasharray:8 6;fill-opacity:.45}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
-<link rel="stylesheet" href="css/neon.css?v=2026-11-22g">
+<link rel="stylesheet" href="css/neon.css?v=2026-11-23a">
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="#" aria-label="The Grid: all games"><svg class="gmark" viewBox="0 0 120 120" aria-hidden="true"><rect x="2" y="2" width="116" height="116" rx="20" fill="none" stroke="#4A5D78" stroke-width="5"/><path d="M40.3 2V118M79.7 2V118M2 40.3H118M2 79.7H118" stroke="#4A5D78" stroke-width="5"/><rect x="84" y="6" width="30" height="30" rx="6" fill="#6FE3EE"/></svg><span class="the" aria-hidden="true">THE</span><span class="bar" aria-hidden="true"></span><span class="word" aria-hidden="true">GRID</span></a>
+  <a class="brand" href="#" aria-label="The Grid: all games"><svg class="gmark" viewBox="0 0 120 120" aria-hidden="true"><rect class="gl" x="2" y="2" width="116" height="116" rx="20" fill="none" stroke-width="5"/><path class="gl" d="M40.3 2V118M79.7 2V118M2 40.3H118M2 79.7H118" stroke-width="5"/><rect class="lit" x="84" y="6" width="30" height="30" rx="6"/></svg><span class="the" aria-hidden="true">THE</span><span class="bar" aria-hidden="true"></span><span class="word" aria-hidden="true">GRID</span></a>
   <span class="crumb" id="crumb"></span>
   <span class="spacer"></span>
   <div class="mode" role="group" aria-label="Play mode"><button class="btn ghost" id="offBtn" type="button" aria-pressed="true">Offline</button><button class="btn ghost live-btn" id="liveBtn" type="button" aria-haspopup="dialog" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg> Online</button></div>
-  <button class="btn ghost" id="musicBtn" type="button" aria-pressed="false" title="Background music (lobby and game loops)"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>Music</button>
+  
   <a class="btn ghost" id="homeBtn" href="#">All games</a>
-  <button class="btn ghost" id="fsBtn" type="button">Full screen</button>
+  <button class="btn ghost iconbtn" id="fsBtn" type="button" aria-label="Full screen" title="Full screen"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button class="btn ghost iconbtn" id="setBtn" type="button" aria-label="Settings" title="Settings: appearance, music and sound" aria-haspopup="dialog"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </header>
 <main id="app"></main>
 <footer class="scoreboard" id="scoreboard" aria-label="Team scores"></footer>
@@ -664,9 +666,9 @@ const hashStr = t => { let h = 2166136261; for (const ch of String(t)) h = Math.
 function avatarOf(p, id) {
   const [sh, li] = String((p && p.avatar) || "").split(":");
   const h = hashStr(id || (p && p.name) || "");
-  return {shape: AV_SHAPES[sh] ? sh : Object.keys(AV_SHAPES)[h % 5], light: AV_LIGHTS[li] || Object.values(AV_LIGHTS)[(h >> 3) % 6]};
+  return {shape: AV_SHAPES[sh] ? sh : Object.keys(AV_SHAPES)[h % 5], light: "var(--l-" + (AV_LIGHTS[li] ? li : Object.keys(AV_LIGHTS)[(h >> 3) % 6]) + ")"};
 }
-const AV = (p, id, size = 22) => { const a = avatarOf(p, id); return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="${AV_SHAPES[a.shape]}" fill="none" stroke="${a.light}" stroke-width="1.9" stroke-linejoin="round"/></svg>`; };
+const AV = (p, id, size = 22) => { const a = avatarOf(p, id); return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="${AV_SHAPES[a.shape]}" fill="none" style="stroke:${a.light}" stroke-width="1.9" stroke-linejoin="round"/></svg>`; };
 const PHONE = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>`;
 
 /* Maths-lite markup: x^2, x^{-1}, log_2, log_{10}, Σ_{r=1}^{n}, M(a,b,c,d) for a 2×2 matrix */
@@ -794,7 +796,7 @@ const easeFall = t => t * t, easeRise = t => 1 - (1 - t) * (1 - t), easeOut = t 
 function roll3d(el, finals, done, sides = 6) {
   const poses = finals.map(restPose);
   const slots = el ? [...el.querySelectorAll(".dslot")] : [];
-  if (!diceMotion || slots.length !== finals.length) { done(poses); return; }
+  if (!diceMotion || (window.GridSettings && GridSettings.reduceMotion()) || slots.length !== finals.length) { done(poses); return; }
   el.classList.add("rolling");
   let longest = 0;
   const plans = slots.map((slot, i) => {
@@ -856,7 +858,8 @@ const motionBtn = id => `<button type="button" class="btn" id="${id}" aria-press
 function bindMotion(id, rerun) { const b = $("#" + id); if (b) b.onclick = () => { diceMotion = !diceMotion; store.set("diceMotion", diceMotion); rerun(); }; }
 
 /* ================= teams & scoreboard ================= */
-const TC = ["#6FE3EE", "#F4A259", "#A79BFF", "#6EE7A8", "#FF7EA8", "#F2D46B"];   // Quiet Neon lights: Ice, Ember, Iris, Jade, Rose, Sun
+const TC = ["var(--t0)", "var(--t1)", "var(--t2)", "var(--t3)", "var(--t4)", "var(--t5)"];   // team lights follow the theme (css/neon.css)
+const TC_HEX = ["#76CFDB", "#EDA45E", "#A79BFF", "#6EDBA5", "#FF7EA8", "#F2D46B"];   // the same lights for phones, which are always dark
 const defaultTeams = n => Array.from({length: n}, (_, i) => ({name: "Team " + (i + 1), score: 0}));
 let teams = store.get("teams", null);
 if (!Array.isArray(teams) || !teams.length) teams = defaultTeams(4);
@@ -938,7 +941,7 @@ function awardPlayer(id, pts) {          // a player scores: in team play it cou
 function liveTeamsState() {
   if (online.group !== "teams") return null;
   const of = {}; Object.keys(liveSess.players).forEach(id => { if (online.of[id] != null) of[id] = online.of[id]; });
-  return {names: online.teams.map(t => t.name), colours: TC.slice(0, online.teams.length), of};
+  return {names: online.teams.map(t => t.name), colours: TC_HEX.slice(0, online.teams.length), of};
 }
 function pushTeams() { if (window.Live && liveSess.code) Live.host.updateState({teams: liveTeamsState()}).catch(() => {}); }
 function hostSetState(obj) { return Live.host.setState({...obj, v: GRID_VERSION, teams: liveTeamsState()}); }
@@ -2044,12 +2047,12 @@ function bbBoard() {
   const W = 2 * s + 1.5 * s * (BB_C - 1), H = h * BB_R + h / 2;
   const cx = c => pad + s + 1.5 * s * c, cy = (c, r) => pad + h / 2 + h * r + (c % 2 ? h / 2 : 0);
   const poly = (x, y) => range(0, 5).map(k => `${(x + s * Math.cos(k * Math.PI / 3)).toFixed(1)},${(y + s * Math.sin(k * Math.PI / 3)).toFixed(1)}`).join(" ");
-  let out = `<rect x="2" y="${pad + h * 0.5}" width="12" height="${H - h}" rx="6" fill="${TC[bb.A]}"/><rect x="${W + 2 * pad - 14}" y="${pad + h * 0.5}" width="12" height="${H - h}" rx="6" fill="${TC[bb.A]}"/>`;
-  out += `<rect x="${pad + s * 0.5}" y="2" width="${W - s}" height="12" rx="6" fill="${TC[bb.B]}"/><rect x="${pad + s * 0.5}" y="${H + 2 * pad - 14}" width="${W - s}" height="12" rx="6" fill="${TC[bb.B]}"/>`;
+  let out = `<rect x="2" y="${pad + h * 0.5}" width="12" height="${H - h}" rx="6" style="fill:${TC[bb.A]}"/><rect x="${W + 2 * pad - 14}" y="${pad + h * 0.5}" width="12" height="${H - h}" rx="6" style="fill:${TC[bb.A]}"/>`;
+  out += `<rect x="${pad + s * 0.5}" y="2" width="${W - s}" height="12" rx="6" style="fill:${TC[bb.B]}"/><rect x="${pad + s * 0.5}" y="${H + 2 * pad - 14}" width="${W - s}" height="12" rx="6" style="fill:${TC[bb.B]}"/>`;
   bb.cells.forEach((cell, i) => {
     const c = i % BB_C, r = Math.floor(i / BB_C), x = cx(c), y = cy(c, r);
-    const fill = cell.owner === "A" ? TC[bb.A] : cell.owner === "B" ? TC[bb.B] : i === bb.open ? "var(--hi)" : "#18243A";
-    const ink = cell.owner ? "#06090F" : i === bb.open ? "var(--hi-ink)" : "var(--ink)";
+    const fill = cell.owner === "A" ? TC[bb.A] : cell.owner === "B" ? TC[bb.B] : i === bb.open ? "var(--hi)" : "var(--hexcell)";
+    const ink = cell.owner ? "var(--t-ink)" : i === bb.open ? "var(--hi-ink)" : "var(--ink)";
     out += `<g class="hex ${bb.path.includes(i) ? "path" : ""}" data-hex="${i}" tabindex="${cell.owner || bb.winner ? -1 : 0}" role="button" aria-label="Hexagon ${esc(cell.l)}${cell.owner ? ", won" : ""}">
       <polygon points="${poly(x, y)}" style="fill:${fill}"/><text x="${x}" y="${y + 2}" style="fill:${ink}">${esc(cell.l)}</text></g>`;
   });
@@ -2527,7 +2530,7 @@ function renderAuction(root) {
         ${ev.phase === "bid" ? `
           <p class="hint">Run an open auction: teams shout bids, and the highest bid wins the lot. Every team starts with ${ev.budget} coins.</p>
           <p class="label" style="margin:0">Winning team</p>
-          <div class="controls">${teams.map((t, i) => `<button type="button" class="tbtn" style="--tc:${TC[i]};${ev.buyer === i ? `background:${TC[i]};color:#06090F` : ""}" data-buyer="${i}" aria-pressed="${ev.buyer === i}">${esc(t.name)}</button>`).join("")}</div>
+          <div class="controls">${teams.map((t, i) => `<button type="button" class="tbtn" style="--tc:${TC[i]};${ev.buyer === i ? `background:${TC[i]};color:var(--t-ink)` : ""}" data-buyer="${i}" aria-pressed="${ev.buyer === i}">${esc(t.name)}</button>`).join("")}</div>
           <label class="label" for="evPrice" style="margin:0">Winning bid</label>
           <div class="machine"><input id="evPrice" inputmode="numeric" value="${esc(ev.price)}" placeholder="0" autocomplete="off"></div>
           ${ev.err ? `<p class="msg bad">${esc(ev.err)}</p>` : ""}
@@ -2918,7 +2921,7 @@ function pbNewGame() {
   pb.winners = {}; pb.gameId = uid(); pb.cards = {}; pb.marks = {}; pb.stopArmed = false;
   if (window.Live && liveSess.code) Live.host.clearGame().then(pbWriteState);
 }
-const GRID_VERSION = "2026-11-22g";   // phones on an older copy of join.html reload when this changes
+const GRID_VERSION = "2026-11-23a";   // phones on an older copy of join.html reload when this changes
 function pbWriteState() {
   if (!pb.on || !window.Live || !liveSess.code) return;
   const D = bingoDist(), n = bingo.rolls.length;
@@ -3044,12 +3047,12 @@ function route() {
 }
 document.addEventListener("keydown", e => {
   if (e.target.closest && e.target.closest("input,textarea,select")) return;
-  if (!$("#liveDlg").hidden) return;
+  if (!$("#liveDlg").hidden || (window.GridSettings && GridSettings.isOpen)) return;
   if (keyHandler) { if (e.code === "Space" && e.target.tagName === "BUTTON") e.target.blur(); keyHandler(e); }
 });
 $("#fsBtn").addEventListener("click", async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
-  catch (e) { $("#fsBtn").textContent = "Use F11 for full screen"; }
+  catch (e) { $("#fsBtn").title = "Use F11 for full screen"; }
 });
 window.addEventListener("hashchange", route);
 

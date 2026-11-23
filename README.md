@@ -14,8 +14,9 @@ Students join at `https://YOUR-USERNAME.github.io/grid/join`.
 | `js/firebase-config.js` | Your Firebase settings. Paste them in once. These values aren't secret. |
 | `js/live.js` | The live connection layer. All games talk to Firebase through this file. |
 | `database.rules.json` | The security rules. Paste them into Firebase → Realtime Database → Rules. |
-| `css/neon.css` | The "Quiet Neon" look: midnight-blue grid, thin lines, and glow only on what's live. Remove its `<link>` in `index.html` to get the old look back. |
-| `js/sound.js` and `audio/` | Background music (a lobby loop and a quieter game loop) and two short sounds: a player joining and a prize being won. The **Music** button in the top bar switches them on or off. The music is original and free to use. |
+| `css/neon.css` | The "Quiet Neon" look in dark and light: solid buttons, thin lines, and glow only on what's live. Remove its `<link>` in `index.html` to get the old look back. |
+| `js/settings.js` | The **Settings** gear in the top bar: appearance (dark, light, or match this computer), volume, lobby music, game music, sound effects, glow and reduce motion. Saved on each computer. |
+| `js/sound.js` and `audio/` | Background music (a lobby loop and a quieter game loop) and two short sounds: a player joining and a prize being won. Volume and on/off switches for each are in Settings. The music is original and free to use. |
 
 ## How live play works
 
